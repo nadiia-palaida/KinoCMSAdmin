@@ -1,0 +1,20 @@
+.image-upload__img-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  max-height: 150px;
+}
+
+.image-upload__label {
+  cursor: pointer;
+  min-width: 100%;
+}
+
+.image-upload__input {
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}

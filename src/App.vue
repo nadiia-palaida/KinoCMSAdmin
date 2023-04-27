@@ -7,7 +7,5 @@ import { RouterLink, RouterView } from 'vue-router'
 </template>
 
 <style>
-#app {
-  min-height: 100vh;
-}
+
 </style>
