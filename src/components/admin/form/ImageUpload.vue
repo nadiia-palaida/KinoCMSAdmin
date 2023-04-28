@@ -1,6 +1,6 @@
 <script setup>
 import {ref} from 'vue'
-import AdminInputComponent from "@/components/admin/form/AdminInputComponent.vue";
+import AdminInputComponent from "./AdminInputComponent.vue";
 
 const image = ref({
   src: null,
