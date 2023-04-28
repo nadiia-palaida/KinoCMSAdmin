@@ -60,7 +60,7 @@ const menu = [
       </div>
 
       <aside class="main-sidebar sidebar-dark-primary admin-sidebar">
-        <router-link :to="{name: 'admin-home'}" class="brand-link admin-logo">
+        <router-link :to="{name: 'home'}" class="brand-link admin-logo">
           <div class="logo__img-wrap">
             <img src="@/assets/imgs/logo.png" alt="logo" class="logo__img">
           </div>
@@ -87,5 +87,6 @@ const menu = [
 </template>
 
 <style>
-@import "admin-lte/dist/css/adminlte.min.css";
+@import "admin-lte/dist/css/adminlte.css";
+@import "toastr/build/toastr.css";
 </style>

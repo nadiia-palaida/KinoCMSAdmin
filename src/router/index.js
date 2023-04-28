@@ -1,76 +1,59 @@
-import {createRouter, createWebHistory} from 'vue-router'
-
-const adminRoutes = [
-    {
-        path: '/admin',
-        name: 'admin-home',
-        component: () => import('../views/admin/AdminHomeView.vue')
-    },
-    {
-        path: '/admin/statistics',
-        name: 'admin-statistics',
-        component: () => import('../views/admin/AdminStatisticsView.vue')
-    },
-    {
-        path: '/admin/banners',
-        name: 'admin-banners',
-        component: () => import('../views/admin/AdminBannersView.vue')
-    },
-    {
-        path: '/admin/films',
-        name: 'admin-films',
-        component: () => import('../views/admin/AdminFilmsView.vue')
-    },
-    {
-        path: '/admin/cinemas',
-        name: 'admin-cinemas',
-        component: () => import('../views/admin/AdminCinemasView.vue')
-    },
-    {
-        path: '/admin/promotions',
-        name: 'admin-promotions',
-        component: () => import('../views/admin/AdminPromotionsView.vue')
-    },
-    {
-        path: '/admin/news',
-        name: 'admin-news',
-        component: () => import('../views/admin/AdminNewsView.vue')
-    },
-    {
-        path: '/admin/pages',
-        name: 'admin-pages',
-        component: () => import('../views/admin/AdminPagesView.vue')
-    },
-    {
-        path: '/admin/users',
-        name: 'admin-users',
-        component: () => import('../views/admin/AdminUsersView.vue')
-    },
-    {
-        path: '/admin/subscribe',
-        name: 'admin-subscribe',
-        component: () => import('../views/admin/AdminSubscribeView.vue')
-    },
-]
-
-const clientRoutes = [
-    {
-        path: '/',
-        name: 'home',
-        component: () => import('../views/Home.vue')
-    },
-    {
-        path: '/',
-        name: 'client-home',
-        component: () => import('../views/client/ClientHomeView.vue')
-    },
-]
+import {createRouter, createWebHashHistory} from 'vue-router'
+import Home from '../views/AdminHomeView.vue'
 
 const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
+    history: createWebHashHistory(import.meta.env.BASE_URL),
     routes: [
-        ...adminRoutes,
-        ...clientRoutes
+        {
+            path: '/',
+            name: 'home',
+            component: Home
+        },
+        {
+            path: '/statistics',
+            name: 'admin-statistics',
+            component: () => import('../views/AdminStatisticsView.vue')
+        },
+        {
+            path: '/banners',
+            name: 'admin-banners',
+            component: () => import('../views/AdminBannersView.vue')
+        },
+        {
+            path: '/films',
+            name: 'admin-films',
+            component: () => import('../views/AdminFilmsView.vue')
+        },
+        {
+            path: '/cinemas',
+            name: 'admin-cinemas',
+            component: () => import('../views/AdminCinemasView.vue')
+        },
+        {
+            path: '/promotions',
+            name: 'admin-promotions',
+            component: () => import('../views/AdminPromotionsView.vue')
+        },
+        {
+            path: '/news',
+            name: 'admin-news',
+            component: () => import('../views/AdminNewsView.vue')
+        },
+        {
+            path: '/pages',
+            name: 'admin-pages',
+            component: () => import('../views/AdminPagesView.vue')
+        },
+        {
+            path: '/users',
+            name: 'admin-users',
+            component: () => import('../views/AdminUsersView.vue')
+        },
+        {
+            path: '/subscribe',
+            name: 'admin-subscribe',
+            component: () => import('../views/AdminSubscribeView.vue')
+        }
     ]
 })
 

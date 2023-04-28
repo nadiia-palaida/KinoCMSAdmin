@@ -1,9 +1,12 @@
+.image-upload {
+  position: relative;
+}
+
 .image-upload__img-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 150px;
-  max-height: 150px;
+  height: 150px;
 }
 
 .image-upload__label {
@@ -17,4 +20,10 @@
   top: 0;
   left: 0;
   z-index: -1;
+}
+
+.image-upload__img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
