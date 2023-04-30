@@ -12,6 +12,7 @@
     "firebase": "^9.20.0",
     "pinia": "^2.0.32",
     "toastr": "^2.1.4",
+    "uuid": "^9.0.0",
     "vee-validate": "^4.8.6",
     "vue": "^3.2.47",
     "vue-router": "^4.1.6"
