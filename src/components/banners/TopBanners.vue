@@ -3,7 +3,8 @@ import {useIsFormValid, useValidateForm, Form} from "vee-validate"
 import InputComponent from "../form/AdminInputComponent.vue"
 import ImageUpload from "../form/ImageUpload.vue"
 import {uploadBytes, ref as firebaseRef} from "firebase/storage";
-import {storage} from "../../firebase";
+import { doc, setDoc } from "firebase/firestore";
+import {storage, db} from "../../firebase";
 import { v4 as uuidv4 } from 'uuid';
 import {ref} from 'vue'
 
@@ -14,8 +15,6 @@ const topBanners = ref({
 })
 
 function uploadImage(banner, index) {
-
-
   if (topBanners.value.bannersList[index]) {
     topBanners.value.bannersList[index] = banner
   } else {
@@ -26,10 +25,9 @@ function uploadImage(banner, index) {
 function addItem() {
   topBanners.value.bannersList.push({
     id: uuidv4(),
-    file: {
-      id: uuidv4(),
-      src: ''
-    },
+    fileId: uuidv4(),
+    fileSrc: '',
+    file: '',
     url: '',
     text: ''
   })
@@ -40,14 +38,23 @@ function deleteItem(index) {
 }
 
 function saveChanges() {
-  topBanners.value.bannersList.forEach(item => {
-    console.log('banner', item)
-    const storageRefTopBanners = firebaseRef(storage, `top-banners/${item.file.id}`);
-
-    uploadBytes(storageRefTopBanners, item.file.src).then((snapshot) => {
+  topBanners.value.bannersList = topBanners.value.bannersList.map(item => {
+    const storageRefTopBanners = firebaseRef(storage, `top-banners/${item.fileId}`);
+    uploadBytes(storageRefTopBanners, item.file).then((snapshot) => {
       console.log('Uploaded a blob or file!', snapshot);
+      item.fileSrc = firebaseRef(storage, `https://firebasestorage.googleapis.com/b/kinocms-460d9.appspot.com/o/top-banners%20${item.fileId}.jpg`);
     });
   })
+
+  const setDocData = {
+    show: topBanners.value.show,
+    bannersList: topBanners.value.bannersList,
+    moveSpeed: topBanners.value.moveSpeed
+  }
+
+  setDoc(doc(db, "banners", "topBanners"), {
+
+  });
 }
 </script>
 

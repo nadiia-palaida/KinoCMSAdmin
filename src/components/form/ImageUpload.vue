@@ -29,7 +29,7 @@ function getFiles(event) {
 function onInput(value, field) {
   emit('update:modelValue', {
     ...props.modelValue,
-    [`${field}.src`]: value
+    [field]: value
   })
 }
 
@@ -50,9 +50,9 @@ function deleteItem() {
     <div>
       <label class="image-upload__label">
         <div class="image-upload__img-wrap rounded border border-secondary mb-2">
-          <i v-show="!modelValue.file.src" class="fa-solid fa-image"></i>
+          <i v-show="!modelValue.file" class="fa-solid fa-image"></i>
 
-          <img v-show="modelValue.file.src" ref="imageUploadRef" :src="modelValue.src" alt="Upload image" class="image-upload__img">
+          <img v-show="modelValue.file" ref="imageUploadRef" :src="modelValue.src" alt="Upload image" class="image-upload__img">
         </div>
 
         <input @change="getFiles" type="file" accept="image/png, image/jpeg" class="image-upload__input">
