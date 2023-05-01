@@ -52,12 +52,12 @@ function deleteItem() {
         <div class="image-upload__img-wrap rounded border border-secondary mb-2">
           <i v-show="!modelValue.file" class="fa-solid fa-image"></i>
 
-          <img v-show="modelValue.file" ref="imageUploadRef" :src="modelValue.src" alt="Upload image" class="image-upload__img">
+          <img v-show="modelValue.file" :src="modelValue.file" ref="imageUploadRef" alt="Upload image" class="image-upload__img">
         </div>
 
         <input @change="getFiles" type="file" accept="image/png, image/jpeg" class="image-upload__input">
 
-        <div class="btn btn-secondary w-100">Добавить</div>
+        <div class="btn btn-secondary w-100">Додати</div>
       </label>
 
       <AdminInputComponent :modelValue="modelValue.url" @input="onInput($event.target.value, FIELD_URL_NAME)" name="film-url" label="URL"/>

@@ -5,35 +5,35 @@ const menu = [
     link: 'admin-statistics'
   },
   {
-    label: 'Баннера/Слайдера',
+    label: 'Банери/Слайдери',
     link: 'admin-banners'
   },
   {
-    label: 'Фильмы',
+    label: 'Фільми',
     link: 'admin-films'
   },
   {
-    label: 'Кинотеатры',
+    label: 'Кінотеатри',
     link: 'admin-cinemas'
   },
   {
-    label: 'Новости',
+    label: 'Новини',
     link: 'admin-news'
   },
   {
-    label: 'Акции',
+    label: 'Акції',
     link: 'admin-promotions'
   },
   {
-    label: 'Страницы',
+    label: 'Сторінки',
     link: 'admin-pages'
   },
   {
-    label: 'Пользователи',
+    label: 'Користувачі',
     link: 'admin-users'
   },
   {
-    label: 'Рассылка',
+    label: 'Розсилка',
     link: 'admin-subscribe'
   },
 ]
