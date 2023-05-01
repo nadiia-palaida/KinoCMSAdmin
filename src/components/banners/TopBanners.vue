@@ -1,11 +1,16 @@
 <script setup>
 import {useIsFormValid, useValidateForm, Form} from "vee-validate"
-import InputComponent from "../form/AdminInputComponent.vue"
+import InputComponent from "../form/InputComponent.vue"
 import ImageUpload from "../form/ImageUpload.vue"
+import SelectComponent from "../form/SelectComponent.vue";
 import {doc, setDoc} from "firebase/firestore";
 import {db, uploadFile} from "../../firebase";
 import {v4 as uuidv4} from 'uuid';
-import {ref, onMounted} from 'vue'
+import {ref, onBeforeMount, onMounted} from 'vue'
+
+const props = defineProps({
+  bannersInfo: {type: Object, required: true}
+})
 
 const speedOptions = [
   {
@@ -80,15 +85,22 @@ async function saveChanges() {
 
   setDoc(doc(db, "banners", "topBanners"), setDocData)
 }
+
+onMounted(() => {
+  console.log('props.bannersInfo', props.bannersInfo)
+  topBanners.value = props.bannersInfo
+})
 </script>
 
 <template>
+  <pre>
+    {{ bannersInfo }}
+  </pre>
   <section class="admin__section">
     <h2 class="text-center mb-4">На головній верх</h2>
 
     <div class="admin__block shadow-lg rounded p-3">
       <div class="admin__switch-wrap">
-        {{ topBanners.active }}
         <div class="custom-control custom-switch custom-switch-lg admin__switch ml-auto">
           <input v-model="topBanners.active" type="checkbox" class="custom-control-input" id="customSwitch1">
           <label class="custom-control-label" for="customSwitch1"></label>
@@ -97,7 +109,7 @@ async function saveChanges() {
 
       <div class="mb-4">Размер: 1000х190</div>
 
-      <Form>
+      <Form @submit="saveChanges">
         <button type="button" @click="addItem" class="btn btn-info mb-4">Додати фото</button>
 
         <div class="admin__form-images mb-2">
@@ -108,18 +120,11 @@ async function saveChanges() {
           </template>
         </div>
 
-        <div class="input-group mb-3">
-          <div class="input-group-prepend">
-            <label class="input-group-text" for="inputGroupSelect01">Швидкість каруселі</label>
-          </div>
-          <select v-model="topBanners.speed" class="custom-select" id="inputGroupSelect01">
-            <option selected>Choose...</option>
-            <option v-for="option in speedOptions" :value="option.value">{{ option.label }}</option>
-          </select>
-        </div>
-      </Form>
+        <SelectComponent v-model="topBanners.speed" :options="speedOptions" label="Швидкість каруселі"
+                         name="top-banners-carousel-speed" class="col-3"/>
 
-      <button @click="saveChanges" class="btn btn-success">Зберегти</button>
+        <button type="submit" class="btn btn-success">Зберегти</button>
+      </Form>
     </div>
   </section>
 </template>

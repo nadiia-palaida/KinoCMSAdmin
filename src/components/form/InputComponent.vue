@@ -17,16 +17,18 @@ const {errorMessage, value} = useField(() => props.name, props.rules);
 </script>
 
 <template>
-  <div class="input">
+  <div class="input mb-3">
     <div class="input__wrap">
       <label class="input__label d-flex align-items-center">
         <span class="input__label-text mr-1">{{ label }}:</span>
 
-        <input :value="modelValue" :name="name" :type="type" :placeholder="placeholder"
-               @input="$emit('update:modelValue', $event.target.value)" class="input__item form-control w-100">
+        <span class="input__item-wrap">
+            <input :value="modelValue" :name="name" :type="type" :placeholder="placeholder"
+                   @input="$emit('update:modelValue', $event.target.value)" class="input__item form-control w-100">
+
+          <span v-if="errorMessage" class="input__error error">{{ errorMessage }}</span>
+        </span>
       </label>
     </div>
-
-    <span v-if="errorMessage" class="input__error">{{ errorMessage }}</span>
   </div>
 </template>

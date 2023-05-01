@@ -1,7 +1,8 @@
 <script setup>
 import {ref, watch} from 'vue'
-import AdminInputComponent from "./AdminInputComponent.vue";
+import AdminInputComponent from "./InputComponent.vue";
 import {readFileImage} from "../../helpers/helper";
+import '@/plugins/vee-validate'
 import 'toastr/build/toastr.min'
 
 const FIELD_FILE_NAME = 'file'
@@ -60,7 +61,7 @@ function deleteItem() {
         <div class="btn btn-secondary w-100">Додати</div>
       </label>
 
-      <AdminInputComponent :modelValue="modelValue.url" @input="onInput($event.target.value, FIELD_URL_NAME)" name="film-url" label="URL"/>
+      <AdminInputComponent :modelValue="modelValue.url" @input="onInput($event.target.value, FIELD_URL_NAME)" rules="required" name="film-url" label="URL"/>
 
       <AdminInputComponent :modelValue="modelValue.text" @input="onInput($event.target.value, FIELD_TEXT_NAME)" name="film-text" label="Text"/>
     </div>

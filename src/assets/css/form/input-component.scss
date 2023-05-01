@@ -1,0 +1,15 @@
+.input {
+  position: relative;
+}
+
+.input__item-wrap {
+  position: relative;
+}
+
+.input__error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  font-size: 10px;
+  color: red;
+}
