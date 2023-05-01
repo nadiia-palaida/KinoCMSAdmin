@@ -1,9 +1,10 @@
 <script setup>
-import {ref, watch} from 'vue'
+import {computed, ref, watch} from 'vue'
 import AdminInputComponent from "./InputComponent.vue";
 import {readFileImage} from "../../helpers/helper";
 import '@/plugins/vee-validate'
 import 'toastr/build/toastr.min'
+import {v4 as uuidv4} from 'uuid';
 
 const FIELD_FILE_NAME = 'file'
 const FIELD_URL_NAME = 'url'
@@ -21,7 +22,7 @@ function getImgFileUrl(imgUrl) {
 
 function getFiles(event) {
   const imgFile = event.target.files[0]
-  if(imgFile) {
+  if (imgFile) {
     onInput(imgFile, FIELD_FILE_NAME)
     readFileImage(imgFile, imageUploadRef.value)
   }
@@ -38,6 +39,10 @@ function deleteItem() {
   // toastr.info('message <button type="button" class="btn clear btn-toastr" onclick="toastr.clear()">OK</button>' , 'Studio Message:');
   emit('deleteImage')
 }
+
+const uid = computed(() => {
+  return uuidv4();
+})
 </script>
 
 <template>
@@ -53,7 +58,8 @@ function deleteItem() {
         <div class="image-upload__img-wrap rounded border border-secondary mb-2">
           <i v-show="!modelValue.file" class="fa-solid fa-image"></i>
 
-          <img v-show="modelValue.file" :src="modelValue.file" ref="imageUploadRef" alt="Upload image" class="image-upload__img">
+          <img v-show="modelValue.file" :src="modelValue.file" ref="imageUploadRef" alt="Upload image"
+               class="image-upload__img">
         </div>
 
         <input @change="getFiles" type="file" accept="image/png, image/jpeg" class="image-upload__input">
@@ -61,9 +67,13 @@ function deleteItem() {
         <div class="btn btn-secondary w-100">Додати</div>
       </label>
 
-      <AdminInputComponent :modelValue="modelValue.url" @input="onInput($event.target.value, FIELD_URL_NAME)" rules="required" name="film-url" label="URL"/>
 
-      <AdminInputComponent :modelValue="modelValue.text" @input="onInput($event.target.value, FIELD_TEXT_NAME)" name="film-text" label="Text"/>
+
+      <AdminInputComponent :modelValue="modelValue.url" @input="onInput($event.target.value, FIELD_URL_NAME)"
+                           rules="required" :name="`film-url-${uid}`" label="URL"/>
+
+      <AdminInputComponent :modelValue="modelValue.text" @input="onInput($event.target.value, FIELD_TEXT_NAME)"
+                           :name="`film-text-${uid}`" label="Text"/>
     </div>
   </div>
 </template>

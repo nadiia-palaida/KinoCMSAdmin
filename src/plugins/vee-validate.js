@@ -1,4 +1,4 @@
-import {defineRule} from 'vee-validate';
+import {defineRule, configure} from 'vee-validate';
 import {required, email, digits, numeric, max_value, min_value} from '@vee-validate/rules';
 
 defineRule('required', required);
@@ -7,3 +7,19 @@ defineRule('digits', digits);
 defineRule('numeric', numeric);
 defineRule('max_value', max_value);
 defineRule('min_value', min_value);
+
+configure({
+    generateMessage: context => {
+        return `The field is invalid`;
+    },
+});
+
+/*
+configure({
+    // Generates an English message locale generator
+    // generateMessage: localize('en', {
+    //     messages: {
+    //         required: 'This field is required',
+    //     },
+    // }),
+});*/

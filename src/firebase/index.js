@@ -1,6 +1,6 @@
 import {initializeApp} from "firebase/app";
 import {getFirestore, doc, setDoc} from "firebase/firestore";
-import {getStorage, ref as firebaseRef, ref, getDownloadURL, uploadBytes} from "firebase/storage";
+import {getStorage, ref as firebaseRef, ref, getDownloadURL, uploadBytes, listAll} from "firebase/storage";
 
 const firebaseConfig = {
     apiKey: "AIzaSyA8tXOMSFo1yUq68GpKuE_BjDxXY-AFdGU",
@@ -18,7 +18,16 @@ const db = getFirestore(app)
 
 async function uploadFile(url, file) {
     let downloadLink = null
-    await uploadBytes(firebaseRef(storage, url), file).then(async (snapshot) => {
+
+    console.log('file', file)
+
+    const metadata = {
+        contentType: file.type,
+    };
+
+    const firebaseRefEl = firebaseRef(storage, url)
+
+    await uploadBytes(firebaseRefEl, file, metadata).then(async (snapshot) => {
         await getDownloadURL(snapshot.ref).then((downloadURL) => {
             downloadLink = downloadURL
         });
@@ -27,4 +36,20 @@ async function uploadFile(url, file) {
     return downloadLink
 }
 
-export {db, storage, uploadFile}
+async function fileExist(fileId, url) {
+    const listRef = ref(storage, url);
+    let isExist = false
+
+    await listAll(listRef)
+        .then((res) => {
+            console.log('res.items', res.items)
+            console.log('fileId', fileId)
+            isExist = res.items.some(item => item.name === fileId)
+            console.log('isExist in', isExist)
+        });
+
+    console.log('isExist out', isExist)
+    return isExist
+}
+
+export {db, storage, uploadFile, fileExist}

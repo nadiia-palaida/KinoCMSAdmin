@@ -4,7 +4,7 @@ import InputComponent from "../form/InputComponent.vue"
 import ImageUpload from "../form/ImageUpload.vue"
 import SelectComponent from "../form/SelectComponent.vue";
 import {doc, setDoc} from "firebase/firestore";
-import {db, uploadFile} from "../../firebase";
+import {db, fileExist, uploadFile} from "../../firebase";
 import {v4 as uuidv4} from 'uuid';
 import {ref, onBeforeMount, onMounted} from 'vue'
 
@@ -41,6 +41,8 @@ const topBanners = ref({
   speed: 0
 })
 
+const isLoading = ref(false)
+
 function uploadImage(banner, index) {
   if (topBanners.value.items[index]) {
     topBanners.value.items[index] = banner
@@ -64,10 +66,14 @@ function deleteItem(index) {
 }
 
 async function saveChanges() {
+  isLoading.value = true
+
   let items = []
 
   for (let i = 0; i < topBanners.value.items.length; i++) {
     let item = topBanners.value.items[i]
+    console.log('exist file',  fileExist(item.fileId, 'top-banners'))
+
     items.push({
       id: item.id,
       fileId: item.fileId,
@@ -83,7 +89,11 @@ async function saveChanges() {
     speed: topBanners.value.speed
   }
 
-  setDoc(doc(db, "banners", "topBanners"), setDocData)
+  console.log('setDocData', setDocData)
+
+  await setDoc(doc(db, "banners", "topBanners"), setDocData)
+
+  isLoading.value = false
 }
 
 onMounted(() => {
@@ -93,9 +103,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <pre>
+<!--  <pre>
     {{ bannersInfo }}
-  </pre>
+  </pre>-->
   <section class="admin__section">
     <h2 class="text-center mb-4">На головній верх</h2>
 
@@ -123,7 +133,12 @@ onMounted(() => {
         <SelectComponent v-model="topBanners.speed" :options="speedOptions" label="Швидкість каруселі"
                          name="top-banners-carousel-speed" class="col-3"/>
 
-        <button type="submit" class="btn btn-success">Зберегти</button>
+        <button type="submit" class="btn btn-success">
+          <div v-if="isLoading" class="spinner-border" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <span v-else>Зберегти</span>
+        </button>
       </Form>
     </div>
   </section>
