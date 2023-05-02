@@ -3,7 +3,9 @@
 }
 
 .input__item-wrap {
+  display: block;
   position: relative;
+  width: 100%;
 }
 
 .input__error {

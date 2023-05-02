@@ -42,13 +42,9 @@ async function fileExist(fileId, url) {
 
     await listAll(listRef)
         .then((res) => {
-            console.log('res.items', res.items)
-            console.log('fileId', fileId)
             isExist = res.items.some(item => item.name === fileId)
-            console.log('isExist in', isExist)
         });
 
-    console.log('isExist out', isExist)
     return isExist
 }
 

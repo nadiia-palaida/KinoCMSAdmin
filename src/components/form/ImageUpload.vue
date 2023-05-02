@@ -7,23 +7,27 @@ import 'toastr/build/toastr.min'
 import {v4 as uuidv4} from 'uuid';
 
 const FIELD_FILE_NAME = 'file'
+const FIELD_FILE_ID = 'fileId'
 const FIELD_URL_NAME = 'url'
 const FIELD_TEXT_NAME = 'text'
 
-const props = defineProps(['modelValue'])
+const props = defineProps({
+  modelValue: {},
+  hasUrl: {type: Boolean, default: true},
+  hasText: {type: Boolean, default: true},
+})
 
 const emit = defineEmits(['deleteImage', 'update:modelValue'])
 
 const imageUploadRef = ref(null)
 
-function getImgFileUrl(imgUrl) {
-  return new URL(`../../assets/imgs/${imgUrl}`, import.meta.url).href
-}
-
-function getFiles(event) {
+async function getFiles(event) {
   const imgFile = event.target.files[0]
   if (imgFile) {
-    onInput(imgFile, FIELD_FILE_NAME)
+
+    console.log('onInput')
+    await onInput(imgFile, FIELD_FILE_NAME)
+    await onInput(uuidv4(), FIELD_FILE_ID)
     readFileImage(imgFile, imageUploadRef.value)
   }
 }
@@ -67,12 +71,10 @@ const uid = computed(() => {
         <div class="btn btn-secondary w-100">Додати</div>
       </label>
 
-
-
-      <AdminInputComponent :modelValue="modelValue.url" @input="onInput($event.target.value, FIELD_URL_NAME)"
+      <AdminInputComponent v-if="hasUrl" :modelValue="modelValue.url" @input="onInput($event.target.value, FIELD_URL_NAME)"
                            rules="required" :name="`film-url-${uid}`" label="URL"/>
 
-      <AdminInputComponent :modelValue="modelValue.text" @input="onInput($event.target.value, FIELD_TEXT_NAME)"
+      <AdminInputComponent v-if="hasText" :modelValue="modelValue.text" @input="onInput($event.target.value, FIELD_TEXT_NAME)"
                            :name="`film-text-${uid}`" label="Text"/>
     </div>
   </div>

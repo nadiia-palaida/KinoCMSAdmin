@@ -9,8 +9,13 @@ import {v4 as uuidv4} from 'uuid';
 import {ref, onBeforeMount, onMounted} from 'vue'
 
 const props = defineProps({
-  bannersInfo: {type: Object, required: true}
+  bannersInfo: {type: Object, required: true},
+  loading: {type: Boolean, default: false},
+  title: {type: String},
+  firebasePathName: {type: String, required: true}
 })
+
+const emit = defineEmits(['saveChanges'])
 
 const speedOptions = [
   {
@@ -35,26 +40,24 @@ const speedOptions = [
   },
 ]
 
-const topBanners = ref({
+const banners = ref({
   active: true,
   items: [],
   speed: 0
 })
 
-const isLoading = ref(false)
-
 function uploadImage(banner, index) {
-  if (topBanners.value.items[index]) {
-    topBanners.value.items[index] = banner
+  if (banners.value.items[index]) {
+    banners.value.items[index] = banner
   } else {
-    topBanners.value.items.push(banner)
+    banners.value.items.push(banner)
   }
 }
 
 function addItem() {
-  topBanners.value.items.push({
+  banners.value.items.push({
     id: uuidv4(),
-    fileId: uuidv4(),
+    fileId: '',
     file: '',
     url: '',
     text: ''
@@ -62,57 +65,52 @@ function addItem() {
 }
 
 function deleteItem(index) {
-  topBanners.value.items.splice(index, 1)
+  banners.value.items.splice(index, 1)
 }
 
 async function saveChanges() {
-  isLoading.value = true
-
   let items = []
 
-  for (let i = 0; i < topBanners.value.items.length; i++) {
-    let item = topBanners.value.items[i]
-    console.log('exist file',  fileExist(item.fileId, 'top-banners'))
+  for (let i = 0; i < banners.value.items.length; i++) {
+    let item = banners.value.items[i]
 
     items.push({
       id: item.id,
       fileId: item.fileId,
-      file: await uploadFile(`top-banners/${item.fileId}`, item.file),
+      file: await fileExist(item.fileId, props.firebasePathName) ? item.file : await uploadFile(`${props.firebasePathName}/${item.fileId}`, item.file),
       url: item.url,
       text: item.text
     })
   }
 
+  banners.value.items = items
+
   const setDocData = {
-    active: topBanners.value.active,
+    active: banners.value.active,
     items: items,
-    speed: topBanners.value.speed
+    speed: banners.value.speed
   }
 
-  console.log('setDocData', setDocData)
-
-  await setDoc(doc(db, "banners", "topBanners"), setDocData)
-
-  isLoading.value = false
+  emit('saveChanges', setDocData)
 }
 
 onMounted(() => {
-  console.log('props.bannersInfo', props.bannersInfo)
-  topBanners.value = props.bannersInfo
+  banners.value = props.bannersInfo
+
+  if (!banners.value.speed) {
+    banners.value.speed = speedOptions[0].value
+  }
 })
 </script>
 
 <template>
-<!--  <pre>
-    {{ bannersInfo }}
-  </pre>-->
   <section class="admin__section">
-    <h2 class="text-center mb-4">На головній верх</h2>
+    <h2 v-if="title" class="text-center mb-4">{{ title }}</h2>
 
     <div class="admin__block shadow-lg rounded p-3">
       <div class="admin__switch-wrap">
         <div class="custom-control custom-switch custom-switch-lg admin__switch ml-auto">
-          <input v-model="topBanners.active" type="checkbox" class="custom-control-input" id="customSwitch1">
+          <input v-model="banners.active" type="checkbox" class="custom-control-input" id="customSwitch1">
           <label class="custom-control-label" for="customSwitch1"></label>
         </div>
       </div>
@@ -123,18 +121,18 @@ onMounted(() => {
         <button type="button" @click="addItem" class="btn btn-info mb-4">Додати фото</button>
 
         <div class="admin__form-images mb-2">
-          <template v-if="topBanners.items">
-            <ImageUpload v-for="(item, index) in topBanners.items" :modelValue="item"
+          <template v-if="banners.items">
+            <ImageUpload v-for="(item, index) in banners.items" :modelValue="item"
                          @update:modelValue="uploadImage($event, index)" @deleteImage="deleteItem(index)"
                          class="mr-4 mb-4" :key="`top-banner-image-${index}`"/>
           </template>
         </div>
 
-        <SelectComponent v-model="topBanners.speed" :options="speedOptions" label="Швидкість каруселі"
+        <SelectComponent v-model="banners.speed" :options="speedOptions" label="Швидкість каруселі"
                          name="top-banners-carousel-speed" class="col-3"/>
 
         <button type="submit" class="btn btn-success">
-          <div v-if="isLoading" class="spinner-border" role="status">
+          <div v-if="loading" class="spinner-border spinner-border-sm" role="status">
             <span class="sr-only">Loading...</span>
           </div>
           <span v-else>Зберегти</span>

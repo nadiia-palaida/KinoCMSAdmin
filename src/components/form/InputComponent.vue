@@ -17,7 +17,7 @@ const {errorMessage, value} = useField(() => props.name, props.rules);
 </script>
 
 <template>
-  <div class="input mb-3">
+  <div class="input">
     <div class="input__wrap">
       <label class="input__label d-flex align-items-center">
         <span class="input__label-text mr-1">{{ label }}:</span>
