@@ -2,5 +2,15 @@
   position: absolute;
   top: 0;
   right: 0;
-  transform: translate(50%, -60%);
+  transform: translate(50%, -50%);
+}
+
+.overlay {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.overlay-page {
+  min-height: 75vh;
 }

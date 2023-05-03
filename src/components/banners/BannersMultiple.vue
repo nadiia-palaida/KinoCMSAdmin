@@ -6,7 +6,7 @@ import SelectComponent from "../form/SelectComponent.vue";
 import {doc, setDoc} from "firebase/firestore";
 import {db, fileExist, uploadFile} from "../../firebase";
 import {v4 as uuidv4} from 'uuid';
-import {ref, onBeforeMount, onMounted} from 'vue'
+import {ref, onBeforeMount, onMounted, computed} from 'vue'
 
 const props = defineProps({
   bannersInfo: {type: Object, required: true},
@@ -46,6 +46,10 @@ const banners = ref({
   speed: 0
 })
 
+const bannersItems = computed(() => {
+  return banners.value.items
+})
+
 function uploadImage(banner, index) {
   if (banners.value.items[index]) {
     banners.value.items[index] = banner
@@ -54,14 +58,18 @@ function uploadImage(banner, index) {
   }
 }
 
-function addItem() {
-  banners.value.items.push({
-    id: uuidv4(),
-    fileId: '',
-    file: '',
-    url: '',
-    text: ''
-  })
+function addItems(event) {
+  if (event.target.files.length) {
+    for(let i = 0; i < event.target.files.length; i++) {
+      banners.value.items.push({
+        id: uuidv4(),
+        fileId: uuidv4(),
+        file: event.target.files[i],
+        url: '',
+        text: ''
+      })
+    }
+  }
 }
 
 function deleteItem(index) {
@@ -118,13 +126,18 @@ onMounted(() => {
       <div class="mb-4">Размер: 1000х190</div>
 
       <Form @submit="saveChanges">
-        <button type="button" @click="addItem" class="btn btn-info mb-4">Додати фото</button>
+        <label type="button" class="btn btn-info mb-4">
+          Додати фото
+
+          <input @change="addItems" type="file" multiple accept="image/png, image/jpeg, image/jpg, image/webp, image/svg"
+                 class="image-upload__input">
+        </label>
 
         <div class="admin__form-images mb-2">
-          <template v-if="banners.items">
-            <ImageUpload v-for="(item, index) in banners.items" :modelValue="item"
+          <template v-if="bannersItems">
+            <ImageUpload v-for="(item, index) in bannersItems" :modelValue="item"
                          @update:modelValue="uploadImage($event, index)" @deleteImage="deleteItem(index)"
-                         class="mr-4 mb-4" :key="`top-banner-image-${index}`"/>
+                         class="mr-4 mb-4" :key="`top-banner-image-${item.id}`"/>
           </template>
         </div>
 

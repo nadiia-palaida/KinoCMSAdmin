@@ -19,8 +19,6 @@ const db = getFirestore(app)
 async function uploadFile(url, file) {
     let downloadLink = null
 
-    console.log('file', file)
-
     const metadata = {
         contentType: file.type,
     };

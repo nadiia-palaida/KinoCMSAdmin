@@ -49,16 +49,22 @@ onMounted(async () => {
 
 <template>
   <AdminLayout>
-    <BannersMultiple v-if="!isLoading" :banners-info="startedValue[NAME_TOP_BANNERS]"
-                     @save-changes="saveChanges($event, NAME_TOP_BANNERS)" firebasePathName="top-banners"
-                     :loading="isLoadingTopBanners" title="На головній верх" class="mb-5"/>
+    <div v-if="isLoading" class="overlay overlay-page">
+      <i class="fas fa-2x fa-sync-alt fa-spin"></i>
+    </div>
 
-    <BannerBackground v-if="!isLoading" :banners-info="startedValue[NAME_BACKGROUND_BANNERS]" firebasePathName="background-banner"
-                      @save-changes="saveChanges($event, NAME_BACKGROUND_BANNERS)" class="mb-5"/>
+    <template v-else>
+      <BannersMultiple :banners-info="startedValue[NAME_TOP_BANNERS]"
+                       @save-changes="saveChanges($event, NAME_TOP_BANNERS)" firebasePathName="top-banners"
+                       :loading="isLoadingTopBanners" title="На головній верх" class="mb-5"/>
+
+      <BannerBackground :banners-info="startedValue[NAME_BACKGROUND_BANNERS]" firebasePathName="background-banner"
+                        @save-changes="saveChanges($event, NAME_BACKGROUND_BANNERS)" class="mb-5"/>
 
 
-    <BannersMultiple v-if="!isLoading" :banners-info="startedValue[NAME_NEWS_BANNERS]"
-                     @save-changes="saveChanges($event, NAME_NEWS_BANNERS)"  firebasePathName="news-banners"
-                     :loading="isLoadingNews" title="На головній новини, акції" class="mb-5"/>
+      <BannersMultiple :banners-info="startedValue[NAME_NEWS_BANNERS]"
+                       @save-changes="saveChanges($event, NAME_NEWS_BANNERS)"  firebasePathName="news-banners"
+                       :loading="isLoadingNews" title="На головній новини, акції" class="mb-5"/>
+    </template>
   </AdminLayout>
 </template>

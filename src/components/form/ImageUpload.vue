@@ -1,10 +1,12 @@
 <script setup>
-import {computed, ref, watch} from 'vue'
-import AdminInputComponent from "./InputComponent.vue";
-import {readFileImage} from "../../helpers/helper";
+import {computed, onMounted, ref, watch} from 'vue'
+import AdminInputComponent from "./InputComponent.vue"
+import {readFileImage} from "../../helpers/helper"
 import '@/plugins/vee-validate'
 import 'toastr/build/toastr.min'
-import {v4 as uuidv4} from 'uuid';
+import {v4 as uuidv4} from 'uuid'
+import {createToaster} from "@meforma/vue-toaster"
+import {useModalStore} from "../../stores/modal";
 
 const FIELD_FILE_NAME = 'file'
 const FIELD_FILE_ID = 'fileId'
@@ -24,8 +26,6 @@ const imageUploadRef = ref(null)
 async function getFiles(event) {
   const imgFile = event.target.files[0]
   if (imgFile) {
-
-    console.log('onInput')
     await onInput(imgFile, FIELD_FILE_NAME)
     await onInput(uuidv4(), FIELD_FILE_ID)
     readFileImage(imgFile, imageUploadRef.value)
@@ -39,14 +39,33 @@ function onInput(value, field) {
   })
 }
 
-function deleteItem() {
-  // toastr.info('message <button type="button" class="btn clear btn-toastr" onclick="toastr.clear()">OK</button>' , 'Studio Message:');
-  emit('deleteImage')
+const store = useModalStore()
+const toaster = createToaster({ /* options */});
+let canDelete = false
+
+async function deleteItem() {
+  store.openModal({
+    component: 'PermissionModal',
+    data: {title: 'Підтвердження видалення', text: 'Ви дійсно хочете видалити цей елемент?'}
+  })
+      .then(data => {
+        emit('deleteImage')
+      })
+      .catch(data => {
+      })
 }
 
 const uid = computed(() => {
   return uuidv4();
 })
+
+onMounted(() => {
+  if (props.modelValue.file && typeof props.modelValue.file === 'object') {
+    readFileImage(props.modelValue.file, imageUploadRef.value)
+  }
+})
+
+
 </script>
 
 <template>
@@ -71,10 +90,12 @@ const uid = computed(() => {
         <div class="btn btn-secondary w-100">Додати</div>
       </label>
 
-      <AdminInputComponent v-if="hasUrl" :modelValue="modelValue.url" @input="onInput($event.target.value, FIELD_URL_NAME)"
+      <AdminInputComponent v-if="hasUrl" :modelValue="modelValue.url"
+                           @input="onInput($event.target.value, FIELD_URL_NAME)"
                            rules="required" :name="`film-url-${uid}`" label="URL"/>
 
-      <AdminInputComponent v-if="hasText" :modelValue="modelValue.text" @input="onInput($event.target.value, FIELD_TEXT_NAME)"
+      <AdminInputComponent v-if="hasText" :modelValue="modelValue.text"
+                           @input="onInput($event.target.value, FIELD_TEXT_NAME)"
                            :name="`film-text-${uid}`" label="Text"/>
     </div>
   </div>
