@@ -19,17 +19,19 @@ const db = getFirestore(app)
 async function uploadFile(url, file) {
     let downloadLink = null
 
-    const metadata = {
-        contentType: file.type,
-    };
+    if(file) {
+        const metadata = {
+            contentType: file.type,
+        };
 
-    const firebaseRefEl = firebaseRef(storage, url)
+        const firebaseRefEl = firebaseRef(storage, url)
 
-    await uploadBytes(firebaseRefEl, file, metadata).then(async (snapshot) => {
-        await getDownloadURL(snapshot.ref).then((downloadURL) => {
-            downloadLink = downloadURL
+        await uploadBytes(firebaseRefEl, file, metadata).then(async (snapshot) => {
+            await getDownloadURL(snapshot.ref).then((downloadURL) => {
+                downloadLink = downloadURL
+            });
         });
-    });
+    }
 
     return downloadLink
 }

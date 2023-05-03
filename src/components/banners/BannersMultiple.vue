@@ -103,6 +103,8 @@ async function saveChanges() {
 }
 
 onMounted(() => {
+  console.log('banners', props.bannersInfo)
+
   banners.value = props.bannersInfo
 
   if (!banners.value.speed) {

@@ -14,3 +14,17 @@
 .overlay-page {
   min-height: 75vh;
 }
+
+.tab-item {
+  &.active {
+    background: #0d6efd;
+
+    .nav-link {
+      color: #fff;
+    }
+  }
+
+  .nav-link:not(.active):hover {
+    color: black;
+  }
+}

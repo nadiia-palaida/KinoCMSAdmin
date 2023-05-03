@@ -50,6 +50,9 @@ async function deleteItem() {
   })
       .then(data => {
         emit('deleteImage')
+        if (props.modelValue.file && typeof props.modelValue.file === 'object') {
+          readFileImage(props.modelValue.file, imageUploadRef.value)
+        }
       })
       .catch(data => {
       })

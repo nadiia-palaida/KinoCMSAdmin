@@ -10,7 +10,13 @@ const menu = [
   },
   {
     label: 'Фільми',
-    link: 'admin-films'
+    link: 'admin-films',
+    sublist: [
+      {
+        label: 'Сторінка фільму',
+        link: 'admin-films-page',
+      }
+    ]
   },
   {
     label: 'Кінотеатри',
@@ -69,11 +75,22 @@ const menu = [
         <nav class="mt-2">
           <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
             <li v-for="menuItem in menu" class="nav-item menu-open">
-              <router-link :to="{name: menuItem.link}" class="nav-link" :class="{active: $route.name === menuItem.link}">
+              <router-link :to="{name: menuItem.link}" class="nav-link"
+                           :class="{active: $route.name === menuItem.link}">
                 <p>
                   {{ menuItem.label }}
                 </p>
+                <i v-if="menuItem.sublist && menuItem.sublist.length" class="right fas fa-angle-left"></i>
               </router-link>
+
+              <ul v-if="menuItem.sublist && menuItem.sublist.length" class="nav nav-treeview">
+                <li v-for="submenuItem in menuItem.sublist" class="nav-item">
+                  <router-link :to="{name: submenuItem.link}" class="nav-link">
+                    <i class="far fa-circle nav-icon"></i>
+                    <p>{{ submenuItem.label }}</p>
+                  </router-link>
+                </li>
+              </ul>
             </li>
           </ul>
         </nav>
