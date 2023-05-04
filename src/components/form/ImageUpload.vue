@@ -1,9 +1,8 @@
 <script setup>
 import {computed, onMounted, ref, watch} from 'vue'
-import AdminInputComponent from "./InputComponent.vue"
+import InputComponent from "./InputComponent.vue"
 import {readFileImage} from "../../helpers/helper"
 import '@/plugins/vee-validate'
-import 'toastr/build/toastr.min'
 import {v4 as uuidv4} from 'uuid'
 import {createToaster} from "@meforma/vue-toaster"
 import {useModalStore} from "../../stores/modal";
@@ -62,6 +61,14 @@ const uid = computed(() => {
   return uuidv4();
 })
 
+const imgSrc = computed(() => {
+   if (props.modelValue.file && typeof props.modelValue.file === 'object') {
+    readFileImage(props.modelValue.file, imageUploadRef.value)
+  } else {
+     return props.modelValue.file
+   }
+})
+
 onMounted(() => {
   if (props.modelValue.file && typeof props.modelValue.file === 'object') {
     readFileImage(props.modelValue.file, imageUploadRef.value)
@@ -84,7 +91,7 @@ onMounted(() => {
         <div class="image-upload__img-wrap rounded border border-secondary mb-2">
           <i v-show="!modelValue.file" class="fa-solid fa-image"></i>
 
-          <img v-show="modelValue.file" :src="modelValue.file" ref="imageUploadRef" alt="Upload image"
+          <img v-show="modelValue.file" :src="imgSrc" ref="imageUploadRef" alt="Upload image"
                class="image-upload__img">
         </div>
 
@@ -93,11 +100,11 @@ onMounted(() => {
         <div class="btn btn-secondary w-100">Додати</div>
       </label>
 
-      <AdminInputComponent v-if="hasUrl" :modelValue="modelValue.url"
+      <InputComponent v-if="hasUrl" :modelValue="modelValue.url"
                            @input="onInput($event.target.value, FIELD_URL_NAME)"
                            rules="required" :name="`film-url-${uid}`" label="URL"/>
 
-      <AdminInputComponent v-if="hasText" :modelValue="modelValue.text"
+      <InputComponent v-if="hasText" :modelValue="modelValue.text"
                            @input="onInput($event.target.value, FIELD_TEXT_NAME)"
                            :name="`film-text-${uid}`" label="Text"/>
     </div>

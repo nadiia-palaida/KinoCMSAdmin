@@ -1,9 +1,55 @@
 <script setup>
-import AdminLayout from "../layouts/AdminLayout.vue";
+import {computed, onMounted, ref} from "vue";
+import {collection, getDocs} from "firebase/firestore";
+import {db} from "../firebase"
+import FilmCard from "../components/films/FilmCard.vue";
+import {useGeneralStore} from "../stores/general";
+
+const films = ref([])
+
+const STATUS_TYPE_IS_SHOW = 'isShow'
+const STATUS_TYPE_SHOW_SOON = 'showSoon'
+
+const filmsIsShow = computed(() => {
+  return films.value.filter(item => item.status === STATUS_TYPE_IS_SHOW)
+})
+
+const filmsShowSoon = computed(() => {
+  return films.value.filter(item => item.status === STATUS_TYPE_SHOW_SOON)
+})
+
+const store = useGeneralStore()
+
+onMounted(async () => {
+  const querySnapshot = await getDocs(collection(db, "films"));
+  querySnapshot.forEach((doc) => {
+    films.value.push(doc.data())
+  });
+
+  store.isLoading = false
+})
 </script>
 
 <template>
-  <AdminLayout>
+  <div v-if="store.isLoading" class="overlay overlay-page">
+    <i class="fas fa-2x fa-sync-alt fa-spin"></i>
+  </div>
 
-  </AdminLayout>
+  <div v-else>
+    <h3 class="text-center">Список фільмів в прокаті</h3>
+
+    <ul v-if="filmsIsShow.length" class="films-list d-flex flex-wrap">
+      <li v-for="item in filmsIsShow" class="films-list__item mr-4">
+        <FilmCard :film="item" class="col-3"/>
+      </li>
+    </ul>
+
+    <h3 class="text-center">Список фільмів, які скоро вийдуть</h3>
+
+    <ul v-if="filmsShowSoon.length" class="films-list d-flex flex-wrap">
+      <li v-for="item in filmsShowSoon" class="films-list__item mr-4">
+        <FilmCard :film="item" class="col-3"/>
+      </li>
+    </ul>
+  </div>
 </template>

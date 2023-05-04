@@ -1,17 +1,20 @@
 <script setup>
 import AdminLayout from "../layouts/AdminLayout.vue"
-import {computed, onMounted, ref} from 'vue'
+import {computed, onBeforeMount, onMounted, ref} from 'vue'
 import {useGeneralStore} from "../stores/general";
 import TabsComponent from "../components/form/TabsComponent.vue"
 import {languagesOptions} from '../i18n/languages'
-import {Form} from "vee-validate"
+import {useValidateForm, Form} from "vee-validate"
 import InputComponent from "../components/form/InputComponent.vue";
 import TextareaComponent from "../components/form/TextareaComponent.vue";
 import ImageUpload from "../components/form/ImageUpload.vue";
-import {v4 as uuidv4} from "uuid";
+import RadioComponent from "../components/form/RadioComponent.vue";
 import CheckboxComponent from "../components/form/CheckboxComponent.vue";
-import {doc, setDoc} from "firebase/firestore";
+import {v4 as uuidv4} from "uuid";
+import {doc, setDoc, getDoc, updateDoc} from "firebase/firestore";
 import {db, fileExist, uploadFile} from "../firebase";
+import '@/plugins/vee-validate'
+import {useRoute} from "vue-router";
 
 const store = useGeneralStore()
 
@@ -36,19 +39,27 @@ const filmTypes = [
   },
 ]
 
-const filmId = computed(() => {
-  return uuidv4()
-})
+const filmStatus = [
+  {
+    label: 'В прокаті',
+    value: 'isShow'
+  },
+  {
+    label: 'Скоро вийде',
+    value: 'showSoon'
+  }
+]
 
 const film = ref({
+  id: uuidv4(),
+  type: [],
+  status: null,
   ua: {
-    id: filmId,
     name: '',
     description: '',
     poster: {},
     images: [],
     trailer: '',
-    type: [],
     seo: {
       url: '',
       title: '',
@@ -57,13 +68,11 @@ const film = ref({
     }
   },
   ru: {
-    id: filmId,
     name: '',
     description: '',
     poster: {},
     images: [],
     trailer: '',
-    type: [],
     seo: {
       url: '',
       title: '',
@@ -89,58 +98,94 @@ function deleteItem(index) {
 }
 
 function deletePoster() {
-  console.log('delete')
   film.value[activeLanguage.value].poster = {}
 }
 
+const route = useRoute()
+
 async function saveChanges() {
-  let items = []
+  const formValidate = useValidateForm()
 
-  const filmLanguageValue = film.value[activeLanguage.value]
+  if (formValidate) {
+    loading.value = true
 
-  for (let i = 0; i < filmLanguageValue.images.length; i++) {
-    let item = filmLanguageValue.images[i]
-
-    items.push({
-      fileId: item.fileId,
-      file: await fileExist(item.fileId, `films/${filmLanguageValue.id}`) ? item.file : await uploadFile(`films/${filmLanguageValue.id}/${item.fileId}`, item.file),
-    })
-  }
-
-  let filmPoster = filmLanguageValue.poster
-
-  if(Object.keys(filmLanguageValue.poster).length)  {
-    filmPoster = {
-      fileId: filmLanguageValue.poster.fileId,
-      file: await fileExist(filmLanguageValue.poster.fileId, `films/${filmLanguageValue.id}`) ? filmLanguageValue.poster.file : await uploadFile(`films/${filmLanguageValue.id}/${filmLanguageValue.poster.fileId}`, filmLanguageValue.poster.file),
+    let setDocData = {
+      id: film.value.id,
+      type: film.value.type,
+      status: film.value.status
     }
-  }
 
-  const setDocData = {
-    id: filmLanguageValue.id,
-    name: filmLanguageValue.name,
-    description: filmLanguageValue.description,
-    poster: filmPoster,
-    images: items,
-    trailer: filmLanguageValue.trailer,
-    type: filmLanguageValue.type,
-    seo: {
-      url: filmLanguageValue.seo.url,
-      title: filmLanguageValue.seo.title,
-      keywords: filmLanguageValue.seo.keywords,
-      description: filmLanguageValue.seo.description
+    for (let filmLanguageKey in film.value) {
+      if (filmLanguageKey === UKRAINIAN_LANGUAGE_NAME || filmLanguageKey === RUSSIAN_LANGUAGE_NAME) {
+        let items = []
+
+        const filmLanguageValue = film.value[filmLanguageKey]
+
+        for (let i = 0; i < filmLanguageValue.images.length; i++) {
+          let item = filmLanguageValue.images[i]
+
+          items.push({
+            fileId: item.fileId,
+            file: await fileExist(item.fileId, `films/${film.value.id}`) ? item.file : await uploadFile(`films/${film.value.id}/${item.fileId}`, item.file),
+          })
+        }
+
+        let filmPoster = filmLanguageValue.poster
+
+        if (Object.keys(filmLanguageValue.poster).length) {
+          filmPoster = {
+            fileId: filmLanguageValue.poster.fileId,
+            file: await fileExist(filmLanguageValue.poster.fileId, `films/${film.value.id}`) ? filmLanguageValue.poster.file : await uploadFile(`films/${film.value.id}/${filmLanguageValue.poster.fileId}`, filmLanguageValue.poster.file),
+          }
+        }
+
+        setDocData = {
+          ...setDocData,
+          [filmLanguageKey]: {
+            name: filmLanguageValue.name,
+            description: filmLanguageValue.description,
+            poster: filmPoster,
+            images: items,
+            trailer: filmLanguageValue.trailer,
+            seo: {
+              url: filmLanguageValue.seo.url,
+              title: filmLanguageValue.seo.title,
+              keywords: filmLanguageValue.seo.keywords,
+              description: filmLanguageValue.seo.description
+            }
+          }
+        }
+      }
     }
+
+    const docRef = doc(db, "films", film.value.id);
+
+    if(route.params.id) {
+      await updateDoc(docRef, setDocData)
+    } else {
+      await setDoc(docRef, setDocData)
+    }
+
+    loading.value = false
   }
-
-  await setDoc(doc(db, "films", "filmsList"), setDocData)
-
-  console.log('success')
 }
 
-onMounted(() => {
-  store.setLoading(false)
+onBeforeMount(async () => {
   activeLanguage.value = languagesOptions[0].value
+
+  if (route.params.id) {
+    const docRef = doc(db, "films", route.params.id);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      film.value = docSnap.data()
+    }
+  } else {
+    film.value.status = filmStatus[0].value
+  }
+  store.setLoading(false)
 })
+
 </script>
 
 <template>
@@ -149,12 +194,16 @@ onMounted(() => {
   </div>
 
   <template v-else>
+<!--    <pre>{{ film }}</pre>-->
+
     <TabsComponent v-model="activeLanguage" :options="languagesOptions" class="mb-4"/>
 
     <Form @submit="saveChanges">
-      <InputComponent v-model="film[activeLanguage].name" name="film-name" label="Назва фільму" class="col-3 mb-4"/>
+      <InputComponent v-model="film[activeLanguage].name" name="film-name" label="Назва фільму" rules="required"
+                      class="col-3 mb-4"/>
 
-      <TextareaComponent v-model="film[activeLanguage].description" name="film-description" label="Опис" class="mb-4"/>
+      <TextareaComponent v-model="film[activeLanguage].description" name="film-description" label="Опис"
+                         rules="required" class="mb-4"/>
 
       <div class="d-flex mb-4">
         <div class="input__label-text">Головна картинка</div>
@@ -186,27 +235,39 @@ onMounted(() => {
       </div>
 
       <InputComponent v-model="film[activeLanguage].trailer" name="film-trailer" label="Посилання на трейлер"
-                      class="mb-4"/>
-
+                      rules="required" class="mb-4"/>
 
       <div class="d-flex mb-4">
         <div class="mr-4">Тип фільму</div>
         <div class="d-flex">
-          <CheckboxComponent v-model="film[activeLanguage].type" :options="filmTypes"/>
+          <CheckboxComponent v-model="film.type" :options="filmTypes" name="film-type"
+                             rules="required"/>
+        </div>
+      </div>
+
+      <div class="d-flex mb-4">
+        <div class="mr-4">Показ фільму</div>
+        <div class="d-flex">
+          <RadioComponent v-model="film.status" :options="filmStatus" name="film-type"
+                          rules="required"/>
         </div>
       </div>
 
       <div class="seo-block">
         <h4 class="text-center mb-4">Seo блок</h4>
 
-        <InputComponent v-model="film[activeLanguage].url" name="seo-url" label="URL" class="mb-4"/>
+        <InputComponent v-model="film[activeLanguage].seo.url" name="seo-url" label="URL" rules="required"
+                        class="mb-4"/>
 
-        <InputComponent v-model="film[activeLanguage].title" name="seo-title" label="Title" class="mb-4"/>
+        <InputComponent v-model="film[activeLanguage].seo.title" name="seo-title" label="Title" rules="required"
+                        class="mb-4"/>
 
-        <InputComponent v-model="film[activeLanguage].keywords" name="seo-keywords" label="Keywords" class="mb-4"/>
+        <InputComponent v-model="film[activeLanguage].seo.keywords" name="seo-keywords" label="Keywords"
+                        rules="required"
+                        class="mb-4"/>
 
-        <TextareaComponent v-model="film[activeLanguage].description" name="seo-description" label="Description"
-                           class="mb-4"/>
+        <TextareaComponent v-model="film[activeLanguage].seo.description" name="seo-description" label="Description"
+                           rules="required" class="mb-4"/>
       </div>
 
       <button type="submit" class="btn btn-success">

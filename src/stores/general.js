@@ -5,7 +5,6 @@ export const useGeneralStore = defineStore('general', {
 
   actions: {
     setLoading(value = false) {
-      console.log('set loading')
       this.isLoading = value
     }
   },

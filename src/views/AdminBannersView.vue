@@ -4,7 +4,7 @@ import BannersMultiple from "../components/banners/BannersMultiple.vue"
 import BannerBackground from "../components/banners/BannerBackground.vue";
 import {doc, getDocs, collection, setDoc} from "firebase/firestore"
 import {db, fileExist, uploadFile} from "../firebase"
-import {computed, ref, onMounted} from 'vue'
+import {computed, ref, onMounted, onBeforeMount} from 'vue'
 import {useGeneralStore} from "../stores/general";
 
 const startedValue = ref({})
@@ -40,7 +40,7 @@ async function saveChanges(data, firebasePathSegment) {
   }
 }
 
-onMounted(async () => {
+onBeforeMount(async () => {
   store.setLoading(true)
   startedValue.value = await getDocs(collection(db, "banners"));
   startedValue.value.forEach((doc) => {
