@@ -1,6 +1,6 @@
 import {initializeApp} from "firebase/app";
 import {getFirestore, doc, setDoc} from "firebase/firestore";
-import {getStorage, ref as firebaseRef, ref, getDownloadURL, uploadBytes, listAll} from "firebase/storage";
+import {getStorage, ref, getDownloadURL, uploadBytes, listAll, deleteObject} from "firebase/storage";
 
 const firebaseConfig = {
     apiKey: "AIzaSyA8tXOMSFo1yUq68GpKuE_BjDxXY-AFdGU",
@@ -24,7 +24,7 @@ async function uploadFile(url, file) {
             contentType: file.type,
         };
 
-        const firebaseRefEl = firebaseRef(storage, url)
+        const firebaseRefEl = ref(storage, url)
 
         await uploadBytes(firebaseRefEl, file, metadata).then(async (snapshot) => {
             await getDownloadURL(snapshot.ref).then((downloadURL) => {
@@ -48,4 +48,14 @@ async function fileExist(fileId, url) {
     return isExist
 }
 
-export {db, storage, uploadFile, fileExist}
+
+function deleteOldImage(fileId, refUrl) {
+    const desertRef = ref(storage, `${refUrl}/${fileId}`);
+    deleteObject(desertRef).then(() => {
+        // File deleted successfully
+    }).catch((error) => {
+        // Uh-oh, an error occurred!
+    });
+}
+
+export {db, storage, uploadFile, fileExist, deleteOldImage}

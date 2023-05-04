@@ -12,7 +12,8 @@ const props = defineProps({
   bannersInfo: {type: Object, required: true},
   loading: {type: Boolean, default: false},
   title: {type: String},
-  firebasePathName: {type: String, required: true}
+  firebasePathName: {type: String, required: true},
+  hasText: {type: Boolean, default: true}
 })
 
 const emit = defineEmits(['saveChanges'])
@@ -60,7 +61,7 @@ function uploadImage(banner, index) {
 
 function addItems(event) {
   if (event.target.files.length) {
-    for(let i = 0; i < event.target.files.length; i++) {
+    for (let i = 0; i < event.target.files.length; i++) {
       banners.value.items.push({
         id: uuidv4(),
         fileId: uuidv4(),
@@ -103,8 +104,6 @@ async function saveChanges() {
 }
 
 onMounted(() => {
-  console.log('banners', props.bannersInfo)
-
   banners.value = props.bannersInfo
 
   if (!banners.value.speed) {
@@ -131,13 +130,14 @@ onMounted(() => {
         <label type="button" class="btn btn-info mb-4">
           Додати фото
 
-          <input @change="addItems" type="file" multiple accept="image/png, image/jpeg, image/jpg, image/webp, image/svg"
+          <input @change="addItems" type="file" multiple
+                 accept="image/png, image/jpeg, image/jpg, image/webp, image/svg"
                  class="image-upload__input">
         </label>
 
         <div class="admin__form-images mb-2">
           <template v-if="bannersItems">
-            <ImageUpload v-for="(item, index) in bannersItems" :modelValue="item"
+            <ImageUpload v-for="(item, index) in bannersItems" :modelValue="item" :hasText="hasText"
                          @update:modelValue="uploadImage($event, index)" @deleteImage="deleteItem(index)"
                          class="mr-4 mb-4" :key="`top-banner-image-${item.id}`"/>
           </template>

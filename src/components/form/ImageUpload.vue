@@ -102,7 +102,7 @@ onMounted(() => {
 
       <InputComponent v-if="hasUrl" :modelValue="modelValue.url"
                            @input="onInput($event.target.value, FIELD_URL_NAME)"
-                           rules="required" :name="`film-url-${uid}`" label="URL"/>
+                           rules="required" :name="`film-url-${uid}`" label="URL" class="mb-4"/>
 
       <InputComponent v-if="hasText" :modelValue="modelValue.text"
                            @input="onInput($event.target.value, FIELD_TEXT_NAME)"
