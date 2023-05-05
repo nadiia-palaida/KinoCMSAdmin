@@ -194,8 +194,6 @@ onBeforeMount(async () => {
   </div>
 
   <template v-else>
-<!--    <pre>{{ film }}</pre>-->
-
     <TabsComponent v-model="activeLanguage" :options="languagesOptions" class="mb-4"/>
 
     <Form @submit="saveChanges">

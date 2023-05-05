@@ -74,8 +74,6 @@ onMounted(() => {
     readFileImage(props.modelValue.file, imageUploadRef.value)
   }
 })
-
-
 </script>
 
 <template>

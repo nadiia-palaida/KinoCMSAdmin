@@ -15,9 +15,6 @@ const filmItem = computed(() => {
     ...props.film[SHOW_BY_LANGUAGE]
   }
 })
-
-onBeforeMount(() => {
-})
 </script>
 
 <template>
