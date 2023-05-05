@@ -51,11 +51,7 @@ async function fileExist(fileId, url) {
 
 function deleteOldImage(fileId, refUrl) {
     const desertRef = ref(storage, `${refUrl}/${fileId}`);
-    deleteObject(desertRef).then(() => {
-        // File deleted successfully
-    }).catch((error) => {
-        // Uh-oh, an error occurred!
-    });
+    return deleteObject(desertRef)
 }
 
 export {db, storage, uploadFile, fileExist, deleteOldImage}

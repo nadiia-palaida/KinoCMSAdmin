@@ -36,30 +36,29 @@ async function saveChanges(data, firebasePathSegment) {
     isLoadingBackground.value = true
   }
 
-
   //delete old images
-  if(data.items) {
-    oldImages.value[firebasePathSegment].filter(item => !data.items.includes(item))
-  } else if(data.fileId) {
-    oldImages.value[firebasePathSegment].filter(item => !data.fileId === item)
+  if (data.items && data.items.length) {
+    const newImagesArr =  data.items.map(item => item.fileId)
+  } else if (data.banner.fileId) {
+    oldImages.value[firebasePathSegment] = oldImages.value[firebasePathSegment].filter(item => data.banner.fileId !== item)
   }
 
-  console.log('oldImages.value[firebasePathSegment]', oldImages.value[firebasePathSegment])
-
-
-  oldImages.value[firebasePathSegment].forEach(item => {
-    deleteOldImage(item, firebasePathSegment)
-  })
+  let calls = []
 
   //add to firebase
-  await setDoc(doc(db, "banners", firebasePathSegment), data)
+  calls.push(await setDoc(doc(db, "banners", firebasePathSegment), data))
 
+  oldImages.value[firebasePathSegment].forEach(item => {
+    calls.push(deleteOldImage(item, firebasePathSegment))
+  })
+
+  await Promise.all(calls)
 
   //set old images
-  if(data.items) {
+  if (data.items && data.items.length) {
     oldImages.value[firebasePathSegment] = data.items.map(item => item.fileId)
-  } else if(data.fileId) {
-    oldImages.value[firebasePathSegment].push(data.fileId)
+  } else if (data.banner.fileId) {
+    oldImages.value[firebasePathSegment].push(data.banner.fileId)
   }
 
   if (firebasePathSegment === NAME_TOP_BANNERS) {
@@ -76,10 +75,10 @@ onBeforeMount(async () => {
   startedValue.value = await getDocs(collection(db, "banners"));
   startedValue.value.forEach((doc) => {
     startedValue.value[doc.id] = doc.data()
-    if(doc.data().items) {
+    if (doc.data().items) {
       oldImages.value[doc.id] = doc.data().items.map(item => item.fileId)
-    } else if(doc.data().fileId) {
-      oldImages.value[doc.id].push(doc.data().fileId)
+    } else if (doc.data().banner.fileId) {
+      oldImages.value[doc.id].push(doc.data().banner.fileId)
     }
   });
   store.setLoading(false)
@@ -92,10 +91,6 @@ onBeforeMount(async () => {
   </div>
 
   <template v-else>
-    <pre>
-      {{ oldImages }}
-    </pre>
-
     <BannersMultiple :banners-info="startedValue[NAME_TOP_BANNERS]"
                      @save-changes="saveChanges($event, NAME_TOP_BANNERS)" :firebasePathName="NAME_TOP_BANNERS"
                      :loading="isLoadingTopBanners" title="На головній верх" class="mb-5"/>
