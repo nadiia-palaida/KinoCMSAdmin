@@ -1,6 +1,6 @@
 <script setup>
 import {useGeneralStore} from "../stores/general";
-import {onBeforeMount, onMounted, ref} from "vue";
+import {computed, onBeforeMount, onMounted, ref} from "vue";
 import {v4 as uuidv4} from "uuid";
 import {languagesOptions} from '../i18n/languages'
 import TabsComponent from "../components/form/TabsComponent.vue"
@@ -11,7 +11,7 @@ import {useValidateForm, Form} from "vee-validate"
 import {useRoute, useRouter} from "vue-router";
 import {db} from "../firebase";
 import {prepareImagesArrToFirebase, prepareImageToFirebase} from "../composables/preparedDataToFirebase";
-import {doc, setDoc, getDoc, updateDoc} from "firebase/firestore";
+import {doc, setDoc, getDoc, getDocs, where, collection, query, updateDoc} from "firebase/firestore";
 
 const store = useGeneralStore()
 const activeLanguage = ref(null)
@@ -48,6 +48,11 @@ const cinema = ref({
     }
   }
 })
+const halls = ref([])
+
+function createdDate(date) {
+  return new Date(date)
+}
 
 function addItems(event) {
   if (event.target.files.length) {
@@ -101,7 +106,7 @@ async function saveChanges() {
     }
 
     const docRef = doc(db, "cinemas", cinema.value.id);
-    if(route.params.id) {
+    if (route.params.id) {
       await updateDoc(docRef, setDocData)
     } else {
       await setDoc(docRef, setDocData)
@@ -118,14 +123,25 @@ onBeforeMount(async () => {
 
   if (route.params.id) {
     const docRef = doc(db, "cinemas", route.params.id);
+
     const docSnap = await getDoc(docRef);
 
     if (docSnap.exists()) {
       cinema.value = docSnap.data()
     }
+
+    const q = query(collection(db, "halls"), where("cinema_id", "==", cinema.value.id));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+      halls.value.push(doc.data())
+    });
   }
 
   store.isLoading = false
+})
+
+onMounted(() => {
+
 })
 </script>
 
@@ -135,7 +151,6 @@ onBeforeMount(async () => {
   </div>
 
   <template v-else>
-    <router-link :to="{name: 'admin-cinemas-hall'}" class="btn btn-info mb-4">Додати зал</router-link>
 
 
     <TabsComponent v-model="activeLanguage" :options="languagesOptions" class="mb-4"/>
@@ -181,6 +196,33 @@ onBeforeMount(async () => {
                        name="cinema-image" :has-text="false" :has-url="false" class="col-2 mb-2"
                        :key="`cinema-image-${index}`"/>
         </div>
+      </div>
+
+      <div>
+        <h4 class="text-center mb-4">Список залів</h4>
+
+        <table class="table">
+          <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Назва</th>
+            <th scope="col">Дата створення</th>
+            <th scope="col"></th>
+            <th scope="col"></th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr v-for="(hall, hallIndex) in halls">
+            <th scope="row">{{ hallIndex + 1 }}</th>
+            <td>{{ hall[activeLanguage].name }}</td>
+            <td>{{ createdDate(hall.created) }}</td>
+            <td>{{hall.created}}</td>
+          </tr>
+          </tbody>
+        </table>
+
+        <router-link :to="{name: 'admin-cinemas-hall', query: {cinema: cinema.id}}" class="btn btn-info mb-4">Додати зал
+        </router-link>
       </div>
 
       <div class="seo-block">

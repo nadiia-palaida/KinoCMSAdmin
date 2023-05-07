@@ -37,7 +37,8 @@ const router = createRouter({
         {
             path: '/cinemas-hall/:id?',
             name: 'admin-cinemas-hall',
-            component: () => import('../views/AdminCinemaHallView.vue')
+            component: () => import('../views/AdminCinemaHallView.vue'),
+            props: route => ({ query: route.query.cinema})
         },
         {
             path: '/cinema-page/:id?',

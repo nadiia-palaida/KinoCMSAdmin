@@ -8,6 +8,14 @@ import InputComponent from "../components/form/InputComponent.vue";
 import TextareaComponent from "../components/form/TextareaComponent.vue";
 import ImageUpload from "../components/form/ImageUpload.vue";
 import {useValidateForm, Form} from "vee-validate"
+import {useRoute, useRouter} from "vue-router";
+import {prepareImagesArrToFirebase, prepareImageToFirebase} from "../composables/preparedDataToFirebase";
+import {doc, serverTimestamp, setDoc, updateDoc} from "firebase/firestore";
+import {db} from "../firebase";
+
+const props = defineProps({
+  query: {type: String}
+})
 
 const store = useGeneralStore()
 const activeLanguage = ref(null)
@@ -16,6 +24,8 @@ const loading = ref(false)
 const cinemaHall = ref({
   id: uuidv4(),
   cinema_id: null,
+  created: null,
+  seats: [],
   ua: {
     name: '',
     description: '',
@@ -55,20 +65,77 @@ function addItems(event) {
   }
 }
 
-function saveChanges() {
-
-}
-
 function deleteBanner() {
   cinemaHall.value[activeLanguage.value].banner = {}
 }
 
+function deleteSchema() {
+  cinemaHall.value[activeLanguage.value].schema = {}
+}
+
+function deleteImageGallery(index) {
+  cinemaHall.value[activeLanguage.value].images.splice(index, 1)
+}
+
+function addRow() {
+  cinemaHall.value.seats.push(0)
+}
+
+const router = useRouter()
+const route = useRoute()
+
+async function saveChanges() {
+  const formValidate = useValidateForm()
+
+  if (formValidate) {
+    loading.value = true
+
+    let setDocData = {
+      id: cinemaHall.value.id,
+      cinema_id: cinemaHall.value.cinema_id
+    }
+
+    for (let languageKey in cinemaHall.value) {
+      if (languagesOptions.some(item => item.value === languageKey)) {
+
+        const cinemaHallGallery = await prepareImagesArrToFirebase(cinemaHall.value[languageKey].images, `cinemas/${cinemaHall.value.id}`)
+        const cinemaHallBanner = await prepareImageToFirebase(cinemaHall.value[languageKey].banner, `cinemas/${cinemaHall.value.id}`)
+        const cinemaHallSchema = await prepareImageToFirebase(cinemaHall.value[languageKey].schema, `cinemas/${cinemaHall.value.id}`)
+
+        setDocData = {
+          ...setDocData,
+          created: route.params.id ? cinemaHall.value.created : serverTimestamp(),
+          [languageKey]: {
+            ...cinemaHall.value[languageKey],
+            images: cinemaHallGallery,
+            banner: cinemaHallBanner,
+            schema: cinemaHallSchema
+          }
+        }
+      }
+    }
+
+    const docRef = doc(db, "halls", cinemaHall.value.id);
+    if (route.params.id) {
+      await updateDoc(docRef, setDocData)
+    } else {
+      await setDoc(docRef, setDocData, {
+        timestamp: serverTimestamp()
+      })
+    }
+
+    await router.replace({name: 'cinema-page', params: {id: cinemaHall.value.cinema_id}})
+
+    loading.value = false
+  }
+}
 
 onBeforeMount(() => {
   activeLanguage.value = languagesOptions[0].value
 })
 
 onMounted(() => {
+  cinemaHall.value.cinema_id = props.query
   store.isLoading = false
 })
 </script>
@@ -86,11 +153,29 @@ onMounted(() => {
                       rules="required" class="col-3 mb-4"/>
 
       <TextareaComponent v-model="cinemaHall[activeLanguage].description" name="cinema-hall-description"
-                         label="Опис залу"
-                         rules="required" class="mb-4"/>
+                         label="Опис залу" rules="required" class="mb-4"/>
 
       <div class="d-flex mb-4">
         <div class="input__label-text">Схема залу</div>
+        <ImageUpload v-model="cinemaHall[activeLanguage].schema" @deleteImage="deleteSchema" name="cinema-hall-banner"
+                     :has-text="false" :has-url="false" class="col-2"/>
+      </div>
+
+      <div class="mb-4">
+        <div class="d-flex align-items-center mb-2">
+          <div class="input__label-text mr-2">Місця</div>
+
+          <button @click.prevent.stop="addRow" type="button" class="btn btn-info">Додати ряд</button>
+        </div>
+
+        <template v-for="(row, rowIndex) in cinemaHall.seats">
+          <InputComponent v-model="cinemaHall.seats[rowIndex]" :name="`cinema-hall-seats-${rowIndex}`"
+                             label="Кількість місць в ряді" rules="required|integer" class="mb-4"/>
+        </template>
+      </div>
+
+      <div class="d-flex mb-4">
+        <div class="input__label-text">Верхній банер</div>
         <ImageUpload v-model="cinemaHall[activeLanguage].banner" @deleteImage="deleteBanner" name="cinema-hall-banner"
                      :has-text="false" :has-url="false" class="col-2"/>
       </div>
