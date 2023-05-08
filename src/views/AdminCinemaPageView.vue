@@ -11,7 +11,20 @@ import {useValidateForm, Form} from "vee-validate"
 import {useRoute, useRouter} from "vue-router";
 import {db} from "../firebase";
 import {prepareImagesArrToFirebase, prepareImageToFirebase} from "../composables/preparedDataToFirebase";
-import {doc, setDoc, getDoc, getDocs, where, collection, query, updateDoc} from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  where,
+  collection,
+  query,
+  updateDoc,
+  Timestamp,
+  deleteDoc
+} from "firebase/firestore";
+import moment from "moment";
+import {useModalStore} from "../stores/modal";
 
 const store = useGeneralStore()
 const activeLanguage = ref(null)
@@ -51,7 +64,7 @@ const cinema = ref({
 const halls = ref([])
 
 function createdDate(date) {
-  return new Date(date)
+  return moment(date.toDate()).format( 'DD.MM.YYYY');
 }
 
 function addItems(event) {
@@ -71,6 +84,13 @@ function deleteImageGallery(index) {
 
 function deleteItem(field) {
   cinema.value[activeLanguage.value][field] = {}
+}
+
+let deletedHalls = []
+
+function deleteHall(index) {
+  deletedHalls.push(halls.value[index].id)
+  halls.value.splice(index, 1)
 }
 
 const router = useRouter()
@@ -112,10 +132,25 @@ async function saveChanges() {
       await setDoc(docRef, setDocData)
     }
 
-    await router.replace({name: 'admin-cinemas'})
+    if(deletedHalls.length) {
+      deletedHalls.forEach(async item => {
+        await deleteDoc(doc(db, "halls", item));
+      })
 
+      deletedHalls = []
+    }
+
+    await router.replace({name: 'admin-cinemas'})
     loading.value = false
   }
+}
+
+async function getHalls() {
+  const q = query(collection(db, "halls"), where("cinema_id", "==", cinema.value.id));
+  const querySnapshot = await getDocs(q);
+  querySnapshot.forEach((doc) => {
+    halls.value.push(doc.data())
+  });
 }
 
 onBeforeMount(async () => {
@@ -129,12 +164,7 @@ onBeforeMount(async () => {
     if (docSnap.exists()) {
       cinema.value = docSnap.data()
     }
-
-    const q = query(collection(db, "halls"), where("cinema_id", "==", cinema.value.id));
-    const querySnapshot = await getDocs(q);
-    querySnapshot.forEach((doc) => {
-      halls.value.push(doc.data())
-    });
+    getHalls()
   }
 
   store.isLoading = false
@@ -151,8 +181,6 @@ onMounted(() => {
   </div>
 
   <template v-else>
-
-
     <TabsComponent v-model="activeLanguage" :options="languagesOptions" class="mb-4"/>
 
     <Form @submit="saveChanges">
@@ -201,7 +229,7 @@ onMounted(() => {
       <div>
         <h4 class="text-center mb-4">Список залів</h4>
 
-        <table class="table">
+        <table class="table" v-if="halls.length">
           <thead>
           <tr>
             <th scope="col">#</th>
@@ -216,7 +244,16 @@ onMounted(() => {
             <th scope="row">{{ hallIndex + 1 }}</th>
             <td>{{ hall[activeLanguage].name }}</td>
             <td>{{ createdDate(hall.created) }}</td>
-            <td>{{hall.created}}</td>
+            <td>
+              <router-link :to="{name: 'admin-cinemas-hall', params: {id: hall.id}}">
+                <i class="fa-solid fa-pen"></i>
+              </router-link>
+            </td>
+            <td>
+              <button @click="deleteHall(hallIndex)" type="button">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </td>
           </tr>
           </tbody>
         </table>

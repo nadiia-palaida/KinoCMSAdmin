@@ -35,15 +35,21 @@ const router = createRouter({
             component: () => import('../views/AdminCinemasView.vue')
         },
         {
-            path: '/cinemas-hall/:id?',
+            path: '/cinema-hall/:id?',
             name: 'admin-cinemas-hall',
             component: () => import('../views/AdminCinemaHallView.vue'),
-            props: route => ({ query: route.query.cinema})
+            props: route => ({ cinemaId: route.query.cinema})
         },
         {
             path: '/cinema-page/:id?',
             name: 'admin-cinemas-page',
             component: () => import('../views/AdminCinemaPageView.vue')
+        },
+        {
+            path: '/seans-page/:id?',
+            name: 'admin-seans-page',
+            component: () => import('../views/AdminSeansView.vue'),
+            props: route => ({ hallId: route.query.hall, cinemaId: route.query.cinema})
         },
         {
             path: '/promotions',

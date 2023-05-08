@@ -1,5 +1,4 @@
 <script setup>
-import AdminLayout from "../layouts/AdminLayout.vue"
 import {computed, onBeforeMount, onMounted, ref} from 'vue'
 import {useGeneralStore} from "../stores/general";
 import TabsComponent from "../components/form/TabsComponent.vue"
