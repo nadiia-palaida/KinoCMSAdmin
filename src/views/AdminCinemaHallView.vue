@@ -10,7 +10,16 @@ import ImageUpload from "../components/form/ImageUpload.vue";
 import {useValidateForm, Form} from "vee-validate"
 import {useRoute, useRouter} from "vue-router";
 import {prepareImagesArrToFirebase, prepareImageToFirebase} from "../composables/preparedDataToFirebase";
-import {collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, updateDoc, where} from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
 import {db} from "../firebase";
 
 const props = defineProps({
@@ -90,16 +99,12 @@ function deleteSeans(index) {
   seanses.value.splice(index, 1)
 }
 
-const seansFilmName = ref('')
-
 async function getSeansFilmName(filmId) {
   const docRef = doc(db, "films", filmId);
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
-    return docSnap.data()
-  } else {
-    return null
+    docSnap.data()
   }
 }
 
@@ -121,9 +126,9 @@ async function saveChanges() {
     for (let languageKey in cinemaHall.value) {
       if (languagesOptions.some(item => item.value === languageKey)) {
 
-        const cinemaHallGallery = await prepareImagesArrToFirebase(cinemaHall.value[languageKey].images, `cinemas/${cinemaHall.value.id}`)
-        const cinemaHallBanner = await prepareImageToFirebase(cinemaHall.value[languageKey].banner, `cinemas/${cinemaHall.value.id}`)
-        const cinemaHallSchema = await prepareImageToFirebase(cinemaHall.value[languageKey].schema, `cinemas/${cinemaHall.value.id}`)
+        const cinemaHallGallery = await prepareImagesArrToFirebase(cinemaHall.value[languageKey].images, `halls/${cinemaHall.value.id}`)
+        const cinemaHallBanner = await prepareImageToFirebase(cinemaHall.value[languageKey].banner, `halls/${cinemaHall.value.id}`)
+        const cinemaHallSchema = await prepareImageToFirebase(cinemaHall.value[languageKey].schema, `halls/${cinemaHall.value.id}`)
 
         setDocData = {
           ...setDocData,
@@ -147,6 +152,14 @@ async function saveChanges() {
       })
     }
 
+    if (deletedSeanses.length) {
+      deletedSeanses.forEach(item => {
+        deleteDoc(doc(db, "seanses", item));
+      })
+
+      deletedSeanses = []
+    }
+
     await router.replace({name: 'admin-cinemas-page', params: {id: cinemaHall.value.cinema_id}})
 
     loading.value = false
@@ -160,8 +173,20 @@ async function getSeanses() {
   querySnapshot.forEach((doc) => {
     seanses.value.push(doc.data())
   });
+
+  seanses.value.map(async (item, index) => {
+    const docRef = doc(db, "films", item.film_id);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      seanses.value[index].film = docSnap.data()
+    }
+  })
 }
 
+async function setSeanses() {
+
+}
 
 onBeforeMount(async () => {
   activeLanguage.value = languagesOptions[0].value
@@ -215,7 +240,7 @@ onMounted(() => {
 
         <template v-for="(row, rowIndex) in cinemaHall.seats">
           <InputComponent v-model="cinemaHall.seats[rowIndex]" :name="`cinema-hall-seats-${rowIndex}`"
-                             label="Кількість місць в ряді" rules="required|integer" class="mb-4"/>
+                          label="Кількість місць в ряді" rules="required|integer" class="mb-4"/>
         </template>
       </div>
 
@@ -254,6 +279,9 @@ onMounted(() => {
           <tr>
             <th scope="col">#</th>
             <th scope="col">Назва</th>
+            <th scope="col">Дата, час</th>
+            <th scope="col">Тип</th>
+            <th scope="col">Ціна</th>
             <th scope="col"></th>
             <th scope="col"></th>
           </tr>
@@ -261,9 +289,12 @@ onMounted(() => {
           <tbody>
           <tr v-for="(seans, seansIndex) in seanses">
             <th scope="row">{{ seansIndex + 1 }}</th>
-            <td>{{ getSeansFilmName(seans.film_id) }}</td>
+            <td v-if="seans.film">{{ seans.film[activeLanguage].name }}</td>
+            <td>{{ seans.date }} {{ seans.time }}</td>
+            <td>{{ seans.type }}</td>
+            <td>{{ seans.price }}</td>
             <td>
-              <router-link :to="{name: 'admin-seans-page', params: {id: seans.id}}">
+              <router-link :to="{name: 'admin-seans-page', params: {id: seans.id},  query: {hall: cinemaHall.id}}">
                 <i class="fa-solid fa-pen"></i>
               </router-link>
             </td>
@@ -276,7 +307,8 @@ onMounted(() => {
           </tbody>
         </table>
 
-        <router-link :to="{name: 'admin-seans-page', query: {hall: cinemaHall.id, cinema: cinemaId}}" class="btn btn-info mb-4">Додати сеанс
+        <router-link :to="{name: 'admin-seans-page', query: {hall: cinemaHall.id}}" class="btn btn-info mb-4">Додати
+          сеанс
         </router-link>
       </div>
 

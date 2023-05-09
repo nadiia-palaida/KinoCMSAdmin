@@ -1,5 +1,5 @@
 import {defineRule, configure} from 'vee-validate';
-import {required, email, digits, numeric, max_value, min_value, integer} from '@vee-validate/rules';
+import {required, email, digits, numeric, max_value, min_value, integer, url} from '@vee-validate/rules';
 
 defineRule('required', required);
 defineRule('email', email);
@@ -8,6 +8,7 @@ defineRule('numeric', numeric);
 defineRule('max_value', max_value);
 defineRule('min_value', min_value);
 defineRule('integer', integer);
+defineRule('url', url);
 
 configure({
     generateMessage: context => {

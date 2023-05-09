@@ -28,7 +28,6 @@ const filmTypes = [
 
 const props = defineProps({
   hallId: {required: true},
-  cinemaId: {required: true},
 })
 
 const films = ref([])
@@ -126,11 +125,20 @@ onBeforeMount(async () => {
     seans.value.cinema_id = hall.value.cinema_id
     seans.value.seats = JSON.parse(JSON.stringify(hall.value.seats))
   }
+
+  if (route.params.id) {
+    const docRef = doc(db, "seanses", route.params.id);
+
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      seans.value = docSnap.data()
+    }
+  }
 })
 
 watch(() => seans.value.film_id,
     (id) => {
-      seans.value.type = null
       getFilmTypes()
     }
 )

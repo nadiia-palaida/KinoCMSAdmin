@@ -49,7 +49,7 @@ const router = createRouter({
             path: '/seans-page/:id?',
             name: 'admin-seans-page',
             component: () => import('../views/AdminSeansView.vue'),
-            props: route => ({ hallId: route.query.hall, cinemaId: route.query.cinema})
+            props: route => ({ hallId: route.query.hall})
         },
         {
             path: '/promotions',
@@ -57,14 +57,34 @@ const router = createRouter({
             component: () => import('../views/AdminPromotionsView.vue')
         },
         {
+            path: '/promotions-page/:id?',
+            name: 'admin-promotions-page',
+            component: () => import('../views/AdminPromotionPageView.vue')
+        },
+        {
             path: '/news',
             name: 'admin-news',
             component: () => import('../views/AdminNewsView.vue')
         },
         {
+            path: '/news-page/:id?',
+            name: 'admin-news-page',
+            component: () => import('../views/AdminNewsPageView.vue')
+        },
+        {
             path: '/pages',
             name: 'admin-pages',
             component: () => import('../views/AdminPagesView.vue')
+        },
+        {
+            path: '/pages/default-page/:id?',
+            name: 'admin-pages-default',
+            component: () => import('../views/pages/DefaultPageView.vue')
+        },
+        {
+            path: '/pages/main-page',
+            name: 'admin-pages-main',
+            component: () => import('../views/pages/MainPageView.vue')
         },
         {
             path: '/users',

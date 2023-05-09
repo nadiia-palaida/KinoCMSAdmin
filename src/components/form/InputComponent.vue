@@ -20,7 +20,7 @@ const {errorMessage, value} = useField(() => props.name, props.rules);
   <div class="input">
     <div class="input__wrap">
       <label class="input__label d-flex align-items-center">
-        <span class="input__label-text mr-1">{{ label }}:</span>
+        <span v-if="label" class="input__label-text mr-1">{{ label }}:</span>
 
         <span class="input__item-wrap">
             <input :value="modelValue" :name="name" :type="type" :placeholder="placeholder"
