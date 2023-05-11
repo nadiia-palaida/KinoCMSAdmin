@@ -7,6 +7,7 @@ import {useModalStore} from '../stores/modal'
 import moment from 'moment'
 
 const MAIN_PAGE_NAME = 'main'
+const CONTACTS_PAGE_NAME = 'contacts'
 
 const store = useGeneralStore()
 const storeModal = useModalStore()
@@ -55,6 +56,9 @@ function getPageRouteName(id) {
   switch (id) {
     case MAIN_PAGE_NAME:
       activeRouteName = 'admin-pages-main'
+      break;
+    case CONTACTS_PAGE_NAME:
+      activeRouteName = 'admin-pages-contacts'
       break;
     default:
       activeRouteName = 'admin-pages-default'
@@ -220,17 +224,17 @@ onMounted(async () => {
         description: ''
       }
     }
-  });
+  });*/
 
-  await setDoc(doc(db, "pages", "contacts"), {
+/*  await setDoc(doc(db, "pages", "contacts"), {
     id: 'contacts',
     created: serverTimestamp(),
     canDelete: false,
-    active: true,
     ua: {
       name: 'Контакти',
       cinemas: [
         {
+          name: '',
           address: '',
           location: '',
           logo: '',
@@ -248,6 +252,7 @@ onMounted(async () => {
       name: 'Контакти',
       cinemas: [
         {
+          name: '',
           address: '',
           location: '',
           logo: '',

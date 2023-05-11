@@ -24,13 +24,7 @@ const menu = [
   },
   {
     label: 'Фільми',
-    link: 'admin-films',
-    sublist: [
-      {
-        label: 'Сторінка фільму',
-        link: 'admin-films-page',
-      }
-    ]
+    link: 'admin-films'
   },
   {
     label: 'Кінотеатри',

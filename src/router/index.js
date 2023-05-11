@@ -87,6 +87,11 @@ const router = createRouter({
             component: () => import('../views/pages/MainPageView.vue')
         },
         {
+            path: '/pages/contacts-page',
+            name: 'admin-pages-contacts',
+            component: () => import('../views/pages/ContactsPageView.vue')
+        },
+        {
             path: '/users',
             name: 'admin-users',
             component: () => import('../views/AdminUsersView.vue')

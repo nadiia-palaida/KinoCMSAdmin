@@ -36,6 +36,8 @@ onMounted(async () => {
   </div>
 
   <div v-else>
+    <router-link :to="{name: 'admin-films-page'}" class="btn btn-info mb-4">Додати фільм</router-link>
+
     <h3 class="text-center">Список фільмів в прокаті</h3>
 
     <ul v-if="filmsIsShow.length" class="films-list d-flex flex-wrap">
