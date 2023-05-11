@@ -15,10 +15,10 @@ import {
   deleteDoc,
   doc,
   getDoc,
-  getDocs,
+  getDocs, query,
   serverTimestamp,
   setDoc,
-  updateDoc,
+  updateDoc, where,
 } from "firebase/firestore";
 import {db} from "../firebase";
 
@@ -152,6 +152,7 @@ async function saveChanges() {
       })
     }
 
+
     if (deletedSeanses.length) {
       deletedSeanses.forEach(item => {
         deleteDoc(doc(db, "seanses", item));
@@ -160,19 +161,25 @@ async function saveChanges() {
       deletedSeanses = []
     }
 
+    getSeanses()
+
     await router.replace({name: 'admin-cinemas-page', params: {id: cinemaHall.value.cinema_id}})
 
     loading.value = false
+
   }
 }
 
 async function getSeanses() {
-  const querySnapshot = await getDocs(collection(db, "seanses"));
+  const q = query(collection(db, "seanses"), where("hall_id", "==", cinemaHall.value.id));
+  const querySnapshot = await getDocs(q);
+
   seanses.value = []
 
   querySnapshot.forEach((doc) => {
     seanses.value.push(doc.data())
   });
+
 
   seanses.value.map(async (item, index) => {
     const docRef = doc(db, "films", item.film_id);
