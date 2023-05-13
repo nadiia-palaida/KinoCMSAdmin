@@ -8,6 +8,7 @@ import moment from 'moment'
 
 const MAIN_PAGE_NAME = 'main'
 const CONTACTS_PAGE_NAME = 'contacts'
+const CAFE_PAGE_NAME = 'cafe'
 
 const store = useGeneralStore()
 const storeModal = useModalStore()
@@ -47,7 +48,9 @@ function getStatusLabel(status) {
 }
 
 function createdDate(date) {
-  return moment(date.toDate()).format( 'DD.MM.YYYY');
+  if(date) {
+    return moment(date.toDate()).format( 'DD.MM.YYYY');
+  } return null
 }
 
 function getPageRouteName(id) {
@@ -60,6 +63,9 @@ function getPageRouteName(id) {
     case CONTACTS_PAGE_NAME:
       activeRouteName = 'admin-pages-contacts'
       break;
+    case CAFE_PAGE_NAME:
+      activeRouteName = 'admin-pages-cafe'
+      break;
     default:
       activeRouteName = 'admin-pages-default'
   }
@@ -70,203 +76,6 @@ function getPageRouteName(id) {
 onMounted(async () => {
   await getPages()
   store.isLoading = false
-
-/*  await setDoc(doc(db, "pages", "about"), {
-    id: 'about',
-    created: serverTimestamp(),
-    canDelete: false,
-    active: true,
-    ua: {
-      name: 'Про кінотеатр',
-      description: '',
-      banner: {},
-      images: [],
-      seo: {
-        url: '',
-        title: '',
-        keywords: '',
-        description: ''
-      }
-    },
-    ru: {
-      name: 'О кинотеатре',
-      description: '',
-      banner: {},
-      images: [],
-      seo: {
-        url: '',
-        title: '',
-        keywords: '',
-        description: ''
-      }
-    }
-  });
-
-  await setDoc(doc(db, "pages", "cafe"), {
-    id: 'cafe',
-    created: serverTimestamp(),
-    canDelete: false,
-    active: true,
-    ua: {
-      name: 'Кафе-бар',
-      description: '',
-      banner: {},
-      images: [],
-      seo: {
-        url: '',
-        title: '',
-        keywords: '',
-        description: ''
-      }
-    },
-    ru: {
-      name: 'Кафе-бар',
-      description: '',
-      banner: {},
-      images: [],
-      seo: {
-        url: '',
-        title: '',
-        keywords: '',
-        description: ''
-      }
-    }
-  });
-
-  await setDoc(doc(db, "pages", "vip"), {
-    id: 'vip',
-    created: serverTimestamp(),
-    canDelete: false,
-    active: true,
-    ua: {
-      name: 'Vip-зал',
-      description: '',
-      banner: {},
-      images: [],
-      seo: {
-        url: '',
-        title: '',
-        keywords: '',
-        description: ''
-      }
-    },
-    ru: {
-      name: 'Vip-зал',
-      description: '',
-      banner: {},
-      images: [],
-      seo: {
-        url: '',
-        title: '',
-        keywords: '',
-        description: ''
-      }
-    }
-  });
-
-  await setDoc(doc(db, "pages", "advertising"), {
-    id: 'advertising',
-    created: serverTimestamp(),
-    canDelete: false,
-    active: true,
-    ua: {
-      name: 'Реклама',
-      description: '',
-      banner: {},
-      images: [],
-      seo: {
-        url: '',
-        title: '',
-        keywords: '',
-        description: ''
-      }
-    },
-    ru: {
-      name: 'Реклама',
-      description: '',
-      banner: {},
-      images: [],
-      seo: {
-        url: '',
-        title: '',
-        keywords: '',
-        description: ''
-      }
-    }
-  });
-
-  await setDoc(doc(db, "pages", "childrenRoom"), {
-    id: 'childrenRoom',
-    created: serverTimestamp(),
-    canDelete: false,
-    active: true,
-    ua: {
-      name: 'Дитяча кімната',
-      description: '',
-      banner: {},
-      images: [],
-      seo: {
-        url: '',
-        title: '',
-        keywords: '',
-        description: ''
-      }
-    },
-    ru: {
-      name: 'Детская комната',
-      description: '',
-      banner: {},
-      images: [],
-      seo: {
-        url: '',
-        title: '',
-        keywords: '',
-        description: ''
-      }
-    }
-  });*/
-
-/*  await setDoc(doc(db, "pages", "contacts"), {
-    id: 'contacts',
-    created: serverTimestamp(),
-    canDelete: false,
-    ua: {
-      name: 'Контакти',
-      cinemas: [
-        {
-          name: '',
-          address: '',
-          location: '',
-          logo: '',
-          active: true,
-        }
-      ],
-      seo: {
-        url: '',
-        title: '',
-        keywords: '',
-        description: ''
-      }
-    },
-    ru: {
-      name: 'Контакти',
-      cinemas: [
-        {
-          name: '',
-          address: '',
-          location: '',
-          logo: '',
-          active: true,
-        }
-      ],
-      seo: {
-        url: '',
-        title: '',
-        keywords: '',
-        description: ''
-      }
-    }
-  });*/
 })
 </script>
 

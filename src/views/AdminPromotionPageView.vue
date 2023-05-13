@@ -74,6 +74,11 @@ function deleteImageGallery(index) {
 const router = useRouter()
 const route = useRoute()
 
+import { useForm } from 'vee-validate';
+const form = useForm();
+
+console.log('form', form)
+
 async function saveChanges() {
   const formValidate = useValidateForm()
 
@@ -162,7 +167,7 @@ onBeforeMount(async() => {
 
       <div class="d-flex mb-4">
         <div class="input__label-text">Головна картинка</div>
-        <ImageUpload v-model="promotion[activeLanguage].banner" @deleteImage="deleteBanner" name="promotion-banner"
+        <ImageUpload v-model="promotion[activeLanguage].banner" @deleteImage="deleteBanner" name="promotion-banner" :form="form"
                      :has-text="false" :has-url="false" class="col-2"/>
       </div>
 

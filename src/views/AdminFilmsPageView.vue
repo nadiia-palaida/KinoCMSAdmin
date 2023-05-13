@@ -159,7 +159,7 @@ async function saveChanges() {
 
     const docRef = doc(db, "films", film.value.id);
 
-    if(route.params.id) {
+    if (route.params.id) {
       await updateDoc(docRef, setDocData)
     } else {
       await setDoc(docRef, setDocData)
@@ -205,8 +205,7 @@ onBeforeMount(async () => {
       <div class="d-flex mb-4">
         <div class="input__label-text">Головна картинка</div>
         <ImageUpload v-model="film[activeLanguage].poster" @deleteImage="deletePoster" name="film-poster"
-                     :has-text="false" :has-url="false"
-                     class="col-2"/>
+                     :has-text="false" :has-url="false" class="col-2"/>
       </div>
 
       <div class="mb-4">
@@ -225,9 +224,8 @@ onBeforeMount(async () => {
 
         <div v-if="film[activeLanguage].images.length" class="d-flex flex-wrap">
           <ImageUpload v-for="(item, index) in film[activeLanguage].images" v-model="film[activeLanguage].images[index]"
-                       @deleteImage="deleteItem(index)"
-                       name="film-image" :has-text="false" :has-url="false" class="col-2 mb-2"
-                       :key="`film-image-${index}`"/>
+                       @deleteImage="deleteItem(index)" name="film-image" :has-text="false" :has-url="false"
+                       class="col-2 mb-2" :key="`film-image-${index}`"/>
         </div>
       </div>
 

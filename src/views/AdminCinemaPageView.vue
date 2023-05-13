@@ -11,20 +11,10 @@ import {useValidateForm, Form} from "vee-validate"
 import {useRoute, useRouter} from "vue-router";
 import {db} from "../firebase";
 import {prepareImagesArrToFirebase, prepareImageToFirebase} from "../composables/preparedDataToFirebase";
-import {
-  doc,
-  setDoc,
-  getDoc,
-  getDocs,
-  where,
-  collection,
-  query,
-  updateDoc,
-  Timestamp,
-  deleteDoc
-} from "firebase/firestore";
+import {doc, setDoc, getDoc, getDocs, where, collection, query, updateDoc, deleteDoc} from "firebase/firestore";
 import moment from "moment";
 import {useModalStore} from "../stores/modal";
+import CinemaHall from '../components/cinemas/CinemaHall.vue'
 
 const store = useGeneralStore()
 const activeLanguage = ref(null)
@@ -63,8 +53,18 @@ const cinema = ref({
 })
 const halls = ref([])
 
+const SHOW_CINEMA_PAGE = 'cinema-page'
+const SHOW_HALL_PAGE = 'hall-page'
+
+const activePage = ref(SHOW_CINEMA_PAGE)
+
+const editedHall = ref(null)
+
 function createdDate(date) {
-  return moment(date.toDate()).format( 'DD.MM.YYYY');
+  if (date) {
+    return moment(date.toDate()).format('DD.MM.YYYY');
+  }
+  return null
 }
 
 function addItems(event) {
@@ -84,6 +84,23 @@ function deleteImageGallery(index) {
 
 function deleteItem(field) {
   cinema.value[activeLanguage.value][field] = {}
+}
+
+function addHall(hall) {
+  console.log('hall', hall)
+  halls.value.push(hall)
+  activePage.value = SHOW_CINEMA_PAGE
+}
+
+function editHandleHall(index) {
+  editedHall.value = halls.value[index]
+  activePage.value = SHOW_HALL_PAGE
+}
+
+function editHall(hall) {
+  let findHallIndex = halls.value.findIndex(item => item.id === hall.id)
+  halls.value[findHallIndex] = hall
+  activePage.value = SHOW_CINEMA_PAGE
 }
 
 let deletedHalls = []
@@ -132,7 +149,14 @@ async function saveChanges() {
       await setDoc(docRef, setDocData)
     }
 
-    if(deletedHalls.length) {
+    console.log('halls', halls)
+
+    halls.value.forEach(async item => {
+      const docRefHalls = doc(db, "halls", item.id);
+      await setDoc(docRefHalls, item)
+    })
+
+    if (deletedHalls.length) {
       deletedHalls.forEach(async item => {
         await deleteDoc(doc(db, "halls", item));
       })
@@ -181,111 +205,116 @@ onMounted(() => {
   </div>
 
   <template v-else>
-    <TabsComponent v-model="activeLanguage" :options="languagesOptions" class="mb-4"/>
+    <div v-if="activePage === SHOW_CINEMA_PAGE">
+      <TabsComponent v-model="activeLanguage" :options="languagesOptions" class="mb-4"/>
 
-    <Form @submit="saveChanges">
-      <InputComponent v-model="cinema[activeLanguage].name" name="cinema-name" label="Назва кінотеатру"
-                      rules="required" class="col-3 mb-4"/>
+      <Form @submit="saveChanges">
+        <InputComponent v-model="cinema[activeLanguage].name" name="cinema-name" label="Назва кінотеатру"
+                        rules="required" class="col-3 mb-4"/>
 
-      <TextareaComponent v-model="cinema[activeLanguage].description" name="cinema-description"
-                         label="Опис" rules="required" class="mb-4"/>
+        <TextareaComponent v-model="cinema[activeLanguage].description" name="cinema-description"
+                           label="Опис" rules="required" class="mb-4"/>
 
-      <TextareaComponent v-model="cinema[activeLanguage].condition" name="cinema-condition"
-                         label="Умова" rules="required" class="mb-4"/>
+        <TextareaComponent v-model="cinema[activeLanguage].condition" name="cinema-condition"
+                           label="Умова" rules="required" class="mb-4"/>
 
-      <div class="d-flex mb-4">
-        <div class="input__label-text">Логотип</div>
-        <ImageUpload v-model="cinema[activeLanguage].logo" @deleteImage="deleteItem('logo')" name="cinema-logo"
-                     :has-text="false" :has-url="false" class="col-2"/>
-      </div>
-
-      <div class="d-flex mb-4">
-        <div class="input__label-text">Фото верхнего баннера</div>
-        <ImageUpload v-model="cinema[activeLanguage].banner" @deleteImage="deleteItem('banner')" name="cinema-banner"
-                     :has-text="false" :has-url="false" class="col-2"/>
-      </div>
-
-      <div class="mb-4">
-        <div class="mb-2">
-          <div class="input__label-text">Галерея картинок</div>
-          <div class="input__label-text">Размер: 1000х190</div>
+        <div class="d-flex mb-4">
+          <div class="input__label-text">Логотип</div>
+          <ImageUpload v-model="cinema[activeLanguage].logo" @deleteImage="deleteItem('logo')" name="cinema-logo"
+                       :has-text="false" :has-url="false" class="col-2"/>
         </div>
 
-        <label type="button" class="btn btn-info mb-4">
-          Додати фото
-
-          <input @change="addItems" type="file" multiple
-                 accept="image/png, image/jpeg, image/jpg, image/webp, image/svg" class="image-upload__input">
-        </label>
-
-        <div v-if="cinema[activeLanguage].images.length" class="d-flex flex-wrap">
-          <ImageUpload v-for="(item, index) in cinema[activeLanguage].images"
-                       v-model="cinema[activeLanguage].images[index]" @deleteImage="deleteImageGallery(index)"
-                       name="cinema-image" :has-text="false" :has-url="false" class="col-2 mb-2"
-                       :key="`cinema-image-${index}`"/>
+        <div class="d-flex mb-4">
+          <div class="input__label-text">Фото верхнего баннера</div>
+          <ImageUpload v-model="cinema[activeLanguage].banner" @deleteImage="deleteItem('banner')" name="cinema-banner"
+                       :has-text="false" :has-url="false" class="col-2"/>
         </div>
-      </div>
 
-      <div>
-        <h4 class="text-center mb-4">Список залів</h4>
+        <div class="mb-4">
+          <div class="mb-2">
+            <div class="input__label-text">Галерея картинок</div>
+            <div class="input__label-text">Размер: 1000х190</div>
+          </div>
 
-        <table class="table" v-if="halls.length">
-          <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Назва</th>
-            <th scope="col">Дата створення</th>
-            <th scope="col"></th>
-            <th scope="col"></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="(hall, hallIndex) in halls">
-            <th scope="row">{{ hallIndex + 1 }}</th>
-            <td>{{ hall[activeLanguage].name }}</td>
-            <td>{{ createdDate(hall.created) }}</td>
-            <td>
-              <router-link :to="{name: 'admin-cinemas-hall', params: {id: hall.id}}">
-                <i class="fa-solid fa-pen"></i>
-              </router-link>
-            </td>
-            <td>
-              <button @click="deleteHall(hallIndex)" type="button">
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+          <label type="button" class="btn btn-info mb-4">
+            Додати фото
 
-        <router-link :to="{name: 'admin-cinemas-hall', query: {cinema: cinema.id}}" class="btn btn-info mb-4">Додати зал
-        </router-link>
-      </div>
+            <input @change="addItems" type="file" multiple
+                   accept="image/png, image/jpeg, image/jpg, image/webp, image/svg" class="image-upload__input">
+          </label>
 
-      <div class="seo-block">
-        <h4 class="text-center mb-4">Seo блок</h4>
-
-        <InputComponent v-model="cinema[activeLanguage].seo.url" name="seo-url" label="URL" rules="required"
-                        class="mb-4"/>
-
-        <InputComponent v-model="cinema[activeLanguage].seo.title" name="seo-title" label="Title" rules="required"
-                        class="mb-4"/>
-
-        <InputComponent v-model="cinema[activeLanguage].seo.keywords" name="seo-keywords" label="Keywords"
-                        rules="required"
-                        class="mb-4"/>
-
-        <TextareaComponent v-model="cinema[activeLanguage].seo.description" name="seo-description"
-                           label="Description"
-                           rules="required" class="mb-4"/>
-      </div>
-
-      <button type="submit" class="btn btn-success">
-        <div v-if="loading" class="spinner-border spinner-border-sm" role="status">
-          <span class="sr-only">Loading...</span>
+          <div v-if="cinema[activeLanguage].images.length" class="d-flex flex-wrap">
+            <ImageUpload v-for="(item, index) in cinema[activeLanguage].images"
+                         v-model="cinema[activeLanguage].images[index]" @deleteImage="deleteImageGallery(index)"
+                         name="cinema-image" :has-text="false" :has-url="false" class="col-2 mb-2"
+                         :key="`cinema-image-${index}`"/>
+          </div>
         </div>
-        <span v-else>Зберегти</span>
-      </button>
-    </Form>
+
+        <div>
+          <h4 class="text-center mb-4">Список залів</h4>
+
+
+          <table class="table" v-if="halls.length">
+            <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Назва</th>
+              <th scope="col">Дата створення</th>
+              <th scope="col"></th>
+              <th scope="col"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(hall, hallIndex) in halls">
+              <th scope="row">{{ hallIndex + 1 }}</th>
+              <td>{{ hall[activeLanguage].name }}</td>
+              <td>{{ createdDate(hall.created) }}</td>
+              <td>
+                <button @click="editHandleHall(hallIndex)" type="button">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+              </td>
+              <td>
+                <button @click="deleteHall(hallIndex)" type="button">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+
+          <button @click="activePage = SHOW_HALL_PAGE" type="button" class="btn btn-info mb-4">Додати зал</button>
+        </div>
+
+        <div class="seo-block">
+          <h4 class="text-center mb-4">Seo блок</h4>
+
+          <InputComponent v-model="cinema[activeLanguage].seo.url" name="seo-url" label="URL" rules="required"
+                          class="mb-4"/>
+
+          <InputComponent v-model="cinema[activeLanguage].seo.title" name="seo-title" label="Title" rules="required"
+                          class="mb-4"/>
+
+          <InputComponent v-model="cinema[activeLanguage].seo.keywords" name="seo-keywords" label="Keywords"
+                          rules="required"
+                          class="mb-4"/>
+
+          <TextareaComponent v-model="cinema[activeLanguage].seo.description" name="seo-description"
+                             label="Description"
+                             rules="required" class="mb-4"/>
+        </div>
+
+        <button type="submit" class="btn btn-success">
+          <div v-if="loading" class="spinner-border spinner-border-sm" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <span v-else>Зберегти</span>
+        </button>
+      </Form>
+    </div>
+
+    <CinemaHall v-if="activePage === SHOW_HALL_PAGE" :cinemaId="cinema.id" :hall="editedHall" @createHall="addHall"
+                @updateHall="editHall"/>
   </template>
 </template>

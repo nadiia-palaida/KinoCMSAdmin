@@ -35,11 +35,20 @@ const bannerFile = ref({
 
 const activeOption = ref(null)
 
+function deleteBanner() {
+  console.log('delete banner')
+
+  bannerFile.value = {
+    file: '',
+    fileId: ''
+  }
+}
+
 async function saveChanges() {
   let bannerItem = null
 
   if (activeOption.value === TYPE_BACKGROUND_PHOTO) {
-    bannerItem =  bannerFile.value
+    bannerItem = bannerFile.value
     bannerItem.file = await fileExist(bannerFile.value.fileId, props.firebasePathName) ? bannerFile.value.file : await uploadFile(`${props.firebasePathName}/${bannerFile.value.fileId}`, bannerFile.value.file)
   } else {
     bannerItem = bannerColor.value
@@ -59,11 +68,11 @@ onBeforeMount(() => {
   } else {
     activeOption.value = props.bannersInfo.type
 
-    if(props.bannersInfo.type === TYPE_BACKGROUND_PHOTO) {
-      if(props.bannersInfo.banner && props.bannersInfo.banner.hasOwnProperty('file')) {
+    if (props.bannersInfo.type === TYPE_BACKGROUND_PHOTO) {
+      if (props.bannersInfo.banner && props.bannersInfo.banner.hasOwnProperty('file')) {
         bannerFile.value = props.bannersInfo.banner
       }
-    } else if(props.bannersInfo.type === TYPE_BACKGROUND_COLOR) {
+    } else if (props.bannersInfo.type === TYPE_BACKGROUND_COLOR) {
       bannerColor.value = props.bannersInfo.banner
     }
   }
@@ -82,8 +91,8 @@ onBeforeMount(() => {
           <RadioComponent v-model="activeOption" :options="backgroundOptions" name="background-banner-radio"
                           class="mr-4"/>
 
-          <ImageUpload v-show="activeOption === TYPE_BACKGROUND_PHOTO" v-model="bannerFile" :hasUrl="false" :hasText="false"
-                       class="col-2"/>
+          <ImageUpload v-show="activeOption === TYPE_BACKGROUND_PHOTO" v-model="bannerFile" :hasUrl="false" @deleteImage="deleteBanner"
+                       :hasText="false" name="banner-background-image" class="col-2"/>
 
           <div v-show="activeOption === TYPE_BACKGROUND_COLOR">
             <label>

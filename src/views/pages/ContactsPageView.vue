@@ -10,7 +10,7 @@ import ImageUpload from "../../components/form/ImageUpload.vue";
 import {useValidateForm, Form} from 'vee-validate'
 import {prepareImagesArrToFirebase, prepareImageToFirebase} from '../../composables/preparedDataToFirebase'
 import {deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc} from 'firebase/firestore'
-import {db} from '../../firebase'
+import {db, fileExist, uploadFile} from '../../firebase'
 import {useRoute, useRouter} from 'vue-router'
 
 const store = useGeneralStore()
@@ -66,6 +66,13 @@ const contactsPage = ref({
 function deleteLogo(index) {
   contactsPage.value[activeLanguage.value].cinemas[index].logo = {}
 }
+function deleteCinema(index) {
+  for (let languageKey in contactsPage.value) {
+    if (languagesOptions.some(item => item.value === languageKey)) {
+      contactsPage.value[languageKey].cinemas.splice(index, 1)
+    }
+  }
+}
 
 function addCinema() {
   for (let languageKey in contactsPage.value) {
@@ -106,15 +113,30 @@ async function saveChanges() {
     for (let languageKey in contactsPage.value) {
       if (languagesOptions.some(item => item.value === languageKey)) {
 
+        let items = []
+
+        for (let i = 0; i < contactsPage.value[languageKey].cinemas.length; i++) {
+          items.push({
+            ...contactsPage.value[languageKey].cinemas[i],
+            logo: await prepareImageToFirebase(contactsPage.value[languageKey].cinemas[i].logo, 'pages/contacts')
+          })
+        }
+
+
         setDocData = {
           ...setDocData,
           created: route.params.id ? contactsPage.value.created : serverTimestamp(),
           [languageKey]: {
             ...contactsPage.value[languageKey],
+            cinemas: items
           }
         }
+
       }
     }
+
+    console.log('setDocData', setDocData)
+
 
     const docRef = doc(db, "pages", contactsPage.value.id);
     await updateDoc(docRef, setDocData)
@@ -149,15 +171,23 @@ onBeforeMount(async () => {
     </div>
 
     <Form @submit="saveChanges">
-      <div v-for="(cinema, cinemaIndex) in contactsPage[activeLanguage].cinemas" class="border border-secondary rounded p-4 mb-4">
+      <div v-for="(cinema, cinemaIndex) in contactsPage[activeLanguage].cinemas" class="border border-secondary rounded p-4 mb-4" :key="`contacts-cinema-${cinemaIndex}`">
         <div class="row">
           <InputComponent v-model="cinema.name" :name="`contacts-page-cinema-name-${cinemaIndex}`" label="Назва кінотеатра"
                           rules="required" class="col-6 mb-4"/>
 
-          <div v-if="cinemaIndex !== 0" class="custom-control custom-switch custom-switch-lg admin__switch col-6">
-            <input :modelValue="cinema.active" @update:modelValue="updateCinemaActive(cinemaIndex, $event.checked)" type="checkbox" class="custom-control-input" id="customSwitch1">
-            <label class="custom-control-label" for="customSwitch1"></label>
-          </div>
+          <template v-if="cinemaIndex !== 0" >
+            <div class="custom-control custom-switch custom-switch-lg admin__switch col-3">
+              <input :checked="cinema.active" @change="updateCinemaActive(cinemaIndex, $event.target.checked)" type="checkbox" class="custom-control-input" :id="`customSwitch-${cinemaIndex}`">
+              <label class="custom-control-label" :for="`customSwitch-${cinemaIndex}`"></label>
+            </div>
+
+            <div class="col-3 d-flex justify-content-end align-items-start">
+              <button @click="deleteCinema(cinemaIndex)" type="button">
+                <i class="fa-solid fa-trash-can fa-2xl"></i>
+              </button>
+            </div>
+          </template>
         </div>
 
 

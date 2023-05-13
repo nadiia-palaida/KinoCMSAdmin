@@ -1,11 +1,15 @@
 <script setup>
-import {computed, onMounted, ref, watch} from 'vue'
-import InputComponent from "./InputComponent.vue"
-import {readFileImage} from "../../helpers/helper"
+import InputComponent from './InputComponent.vue'
+
 import '@/plugins/vee-validate'
 import {v4 as uuidv4} from 'uuid'
-import {createToaster} from "@meforma/vue-toaster"
-import {useModalStore} from "../../stores/modal";
+import {readFileImage} from '../../helpers/helper'
+import {createToaster} from '@meforma/vue-toaster'
+
+import {useModalStore} from '../../stores/modal';
+
+import {computed, onMounted, reactive, ref, watch} from 'vue'
+import {useField} from 'vee-validate'
 
 const FIELD_FILE_NAME = 'file'
 const FIELD_FILE_ID = 'fileId'
@@ -16,6 +20,10 @@ const props = defineProps({
   modelValue: {},
   hasUrl: {type: Boolean, default: true},
   hasText: {type: Boolean, default: true},
+  name: {type: String},
+  rules: {},
+  errors: {type: Array},
+  form: {}
 })
 
 const emit = defineEmits(['deleteImage', 'update:modelValue'])
@@ -62,12 +70,14 @@ const uid = computed(() => {
 })
 
 const imgSrc = computed(() => {
-   if (props.modelValue.file && typeof props.modelValue.file === 'object') {
+  if (props.modelValue.file && typeof props.modelValue.file === 'object') {
     readFileImage(props.modelValue.file, imageUploadRef.value)
   } else {
-     return props.modelValue.file
-   }
+    return props.modelValue.file
+  }
 })
+
+const {errorMessage, value} = reactive(useField(() => props.name, inputValue =>!!inputValue && !!inputValue.file));
 
 onMounted(() => {
   if (props.modelValue.file && typeof props.modelValue.file === 'object') {
@@ -96,15 +106,17 @@ onMounted(() => {
         <input @change="getFiles" type="file" accept="image/png, image/jpeg" class="image-upload__input">
 
         <div class="btn btn-secondary w-100">Додати</div>
+
+        <span v-if="errorMessage" class="input__error error">{{ errorMessage }}</span>
       </label>
 
       <InputComponent v-if="hasUrl" :modelValue="modelValue.url"
-                           @input="onInput($event.target.value, FIELD_URL_NAME)"
-                           rules="required" :name="`film-url-${uid}`" label="URL" class="mb-4"/>
+                      @input="onInput($event.target.value, FIELD_URL_NAME)"
+                      rules="required" :name="`film-url-${uid}`" label="URL" class="mb-4"/>
 
       <InputComponent v-if="hasText" :modelValue="modelValue.text"
-                           @input="onInput($event.target.value, FIELD_TEXT_NAME)"
-                           :name="`film-text-${uid}`" label="Text"/>
+                      @input="onInput($event.target.value, FIELD_TEXT_NAME)"
+                      :name="`film-text-${uid}`" label="Text"/>
     </div>
   </div>
 </template>

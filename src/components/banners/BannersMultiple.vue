@@ -1,14 +1,16 @@
 <script setup>
-import {useIsFormValid, useValidateForm, Form} from "vee-validate"
-import InputComponent from "../form/InputComponent.vue"
-import ImageUpload from "../form/ImageUpload.vue"
-import SelectComponent from "../form/SelectComponent.vue";
-import {doc, setDoc} from "firebase/firestore";
-import {db, fileExist, uploadFile} from "../../firebase";
-import {v4 as uuidv4} from 'uuid';
-import {ref, onBeforeMount, onMounted, computed} from 'vue'
+import InputComponent from '../form/InputComponent.vue'
+import ImageUpload from '../form/ImageUpload.vue'
+import SelectComponent from '../form/SelectComponent.vue'
+
+import {useIsFormValid, useValidateForm, Form} from 'vee-validate'
+import {fileExist, uploadFile} from '../../firebase'
+import {v4 as uuidv4} from 'uuid'
+
+import {ref, onMounted, computed} from 'vue'
 
 const props = defineProps({
+  name: {type: String},
   bannersInfo: {type: Object, required: true},
   loading: {type: Boolean, default: false},
   title: {type: String},
@@ -52,11 +54,7 @@ const bannersItems = computed(() => {
 })
 
 function uploadImage(banner, index) {
-  if (banners.value.items[index]) {
-    banners.value.items[index] = banner
-  } else {
-    banners.value.items.push(banner)
-  }
+  banners.value.items[index] ? banners.value.items[index] = banner : banners.value.items.push(banner)
 }
 
 function addItems(event) {
@@ -137,9 +135,9 @@ onMounted(() => {
 
         <div class="admin__form-images mb-2">
           <template v-if="bannersItems">
-            <ImageUpload v-for="(item, index) in bannersItems" :modelValue="item" :hasText="hasText"
+            <ImageUpload v-for="(item, index) in bannersItems" :modelValue="item" :hasText="hasText" :name="`${name}-banner-${index}`"
                          @update:modelValue="uploadImage($event, index)" @deleteImage="deleteItem(index)"
-                         class="mr-4 mb-4" :key="`top-banner-image-${item.id}`"/>
+                         class="mr-4 mb-4" :key="`top-banner-image-${item.id}`" rules="required"/>
           </template>
         </div>
 
@@ -150,6 +148,7 @@ onMounted(() => {
           <div v-if="loading" class="spinner-border spinner-border-sm" role="status">
             <span class="sr-only">Loading...</span>
           </div>
+
           <span v-else>Зберегти</span>
         </button>
       </Form>

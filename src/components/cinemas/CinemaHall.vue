@@ -1,30 +1,24 @@
 <script setup>
-import {useGeneralStore} from "../stores/general";
+import {useGeneralStore} from "../../stores/general";
 import {onBeforeMount, onMounted, ref} from "vue";
 import {v4 as uuidv4} from "uuid";
-import {languagesOptions} from '../i18n/languages'
-import TabsComponent from "../components/form/TabsComponent.vue"
-import InputComponent from "../components/form/InputComponent.vue";
-import TextareaComponent from "../components/form/TextareaComponent.vue";
-import ImageUpload from "../components/form/ImageUpload.vue";
+import {languagesOptions} from '../../i18n/languages'
+import TabsComponent from "../../components/form/TabsComponent.vue"
+import InputComponent from "../../components/form/InputComponent.vue";
+import TextareaComponent from "../../components/form/TextareaComponent.vue";
+import ImageUpload from "../../components/form/ImageUpload.vue";
 import {useValidateForm, Form} from "vee-validate"
 import {useRoute, useRouter} from "vue-router";
-import {prepareImagesArrToFirebase, prepareImageToFirebase} from "../composables/preparedDataToFirebase";
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs, query,
-  serverTimestamp,
-  setDoc,
-  updateDoc, where,
-} from "firebase/firestore";
-import {db} from "../firebase";
+import {prepareImagesArrToFirebase, prepareImageToFirebase} from "../../composables/preparedDataToFirebase";
+import {deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc,} from "firebase/firestore";
+import {db} from "../../firebase";
 
 const props = defineProps({
-  cinemaId: {type: String}
+  cinemaId: {type: String},
+  hall: {type: Object},
 })
+
+const emit = defineEmits(['updateHall', 'createHall'])
 
 const store = useGeneralStore()
 const activeLanguage = ref(null)
@@ -63,8 +57,6 @@ const cinemaHall = ref({
   }
 })
 
-const seanses = ref([])
-
 function addItems(event) {
   if (event.target.files.length) {
     for (let i = 0; i < event.target.files.length; i++) {
@@ -90,22 +82,6 @@ function deleteImageGallery(index) {
 
 function addRow() {
   cinemaHall.value.seats.push(0)
-}
-
-let deletedSeanses = []
-
-function deleteSeans(index) {
-  deletedSeanses.push(seanses.value[index].id)
-  seanses.value.splice(index, 1)
-}
-
-async function getSeansFilmName(filmId) {
-  const docRef = doc(db, "films", filmId);
-  const docSnap = await getDoc(docRef);
-
-  if (docSnap.exists()) {
-    docSnap.data()
-  }
 }
 
 const router = useRouter()
@@ -143,56 +119,17 @@ async function saveChanges() {
       }
     }
 
-    const docRef = doc(db, "halls", cinemaHall.value.id);
-    if (route.params.id) {
-      await updateDoc(docRef, setDocData)
+
+    if(!props.hall) {
+      emit('createHall', setDocData)
     } else {
-      await setDoc(docRef, setDocData, {
-        timestamp: serverTimestamp()
-      })
+      emit('updateHall', setDocData)
     }
-
-
-    if (deletedSeanses.length) {
-      deletedSeanses.forEach(item => {
-        deleteDoc(doc(db, "seanses", item));
-      })
-
-      deletedSeanses = []
-    }
-
-    getSeanses()
 
     await router.replace({name: 'admin-cinemas-page', params: {id: cinemaHall.value.cinema_id}})
 
     loading.value = false
-
   }
-}
-
-async function getSeanses() {
-  const q = query(collection(db, "seanses"), where("hall_id", "==", cinemaHall.value.id));
-  const querySnapshot = await getDocs(q);
-
-  seanses.value = []
-
-  querySnapshot.forEach((doc) => {
-    seanses.value.push(doc.data())
-  });
-
-
-  seanses.value.map(async (item, index) => {
-    const docRef = doc(db, "films", item.film_id);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      seanses.value[index].film = docSnap.data()
-    }
-  })
-}
-
-async function setSeanses() {
-
 }
 
 onBeforeMount(async () => {
@@ -206,13 +143,16 @@ onBeforeMount(async () => {
     if (docSnap.exists()) {
       cinemaHall.value = docSnap.data()
     }
-
-    getSeanses()
   }
 })
 
 onMounted(() => {
   cinemaHall.value.cinema_id = props.cinemaId
+
+  if(props.hall) {
+    cinemaHall.value = props.hall
+  }
+
   store.isLoading = false
 })
 </script>
@@ -234,7 +174,7 @@ onMounted(() => {
 
       <div class="d-flex mb-4">
         <div class="input__label-text">Схема залу</div>
-        <ImageUpload v-model="cinemaHall[activeLanguage].schema" @deleteImage="deleteSchema" name="cinema-hall-banner"
+        <ImageUpload v-model="cinemaHall[activeLanguage].schema" @deleteImage="deleteSchema" name="cinema-hall-schema"
                      :has-text="false" :has-url="false" class="col-2"/>
       </div>
 
@@ -276,47 +216,6 @@ onMounted(() => {
                        name="cinema-hall-image" :has-text="false" :has-url="false" class="col-2 mb-2"
                        :key="`cinema-hall-image-${index}`"/>
         </div>
-      </div>
-
-      <div>
-        <h4 class="text-center mb-4">Список сеансів</h4>
-
-        <table class="table" v-if="seanses.length">
-          <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Назва</th>
-            <th scope="col">Дата, час</th>
-            <th scope="col">Тип</th>
-            <th scope="col">Ціна</th>
-            <th scope="col"></th>
-            <th scope="col"></th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="(seans, seansIndex) in seanses">
-            <th scope="row">{{ seansIndex + 1 }}</th>
-            <td v-if="seans.film">{{ seans.film[activeLanguage].name }}</td>
-            <td>{{ seans.date }} {{ seans.time }}</td>
-            <td>{{ seans.type }}</td>
-            <td>{{ seans.price }}</td>
-            <td>
-              <router-link :to="{name: 'admin-seans-page', params: {id: seans.id},  query: {hall: cinemaHall.id}}">
-                <i class="fa-solid fa-pen"></i>
-              </router-link>
-            </td>
-            <td>
-              <button @click="deleteSeans(seansIndex)" type="button">
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-
-        <router-link :to="{name: 'admin-seans-page', query: {hall: cinemaHall.id}}" class="btn btn-info mb-4">Додати
-          сеанс
-        </router-link>
       </div>
 
       <div class="seo-block">

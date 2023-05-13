@@ -8,6 +8,8 @@ import {useValidateForm, Form} from "vee-validate"
 import '@/plugins/vee-validate'
 import InputComponent from '../components/form/InputComponent.vue'
 import {useRoute, useRouter} from 'vue-router'
+import {getDataCollection} from '../composables/queriesFirestore'
+import {transformArrToOptions} from '../composables/selectDataOptions'
 
 const activeLanguage = 'ua'
 
@@ -26,29 +28,29 @@ const filmTypes = [
   },
 ]
 
-const props = defineProps({
-  hallId: {required: true},
-})
-
 const films = ref([])
+const halls = ref([])
+const cinemas = ref([])
 const hall = ref({})
 const filmTypesOptions = ref([])
 const loading = ref(false)
 
+const hallsOptions = computed(() => {
+  return transformArrToOptions(halls.value)
+})
+
+const cinemaOptions = computed(() => {
+  return transformArrToOptions(cinemas.value)
+})
 const filmsOptions = computed(() => {
-  return films.value.map(item => {
-    return {
-      label: item[activeLanguage].name,
-      value: item.id
-    }
-  })
+  return transformArrToOptions(films.value)
 })
 
 const seans = ref({
   id: uuidv4(),
-  film_id: null,
-  cinema_id: props.cinemaId,
-  hall_id: props.hallId,
+  film_id: '',
+  cinema_id: null,
+  hall_id: null,
   seats: [],
   type: null,
   date: null,
@@ -61,23 +63,6 @@ async function getFilmTypes() {
   return seans.value.film_id && selectedFilmItem ? filmTypesOptions.value = selectedFilmItem.type.map(item => {
     return {label: item, value: item}
   }) : []
-}
-
-async function getFilms() {
-  const querySnapshot = await getDocs(collection(db, "films"));
-
-  querySnapshot.forEach((doc) => {
-    films.value.push(doc.data())
-  });
-}
-
-async function getHall(id) {
-  const docRef = doc(db, "halls", id);
-  const docSnap = await getDoc(docRef);
-
-  if (docSnap.exists()) {
-    hall.value = docSnap.data()
-  }
 }
 
 async function getFilm(id) {
@@ -111,20 +96,14 @@ async function saveChanges() {
       await setDoc(docRef, setDocData)
     }
 
-    await router.replace({name: 'admin-cinemas-hall', params: {id: hall.value.id}})
+    await router.replace({name: 'admin-seanses', params: {id: hall.value.id}})
     loading.value = false
   }
 }
 
 onBeforeMount(async () => {
-  await getFilms()
-
-  await getHall(props.hallId)
-
-  if (hall.value) {
-    seans.value.cinema_id = hall.value.cinema_id
-    seans.value.seats = JSON.parse(JSON.stringify(hall.value.seats))
-  }
+  films.value = await getDataCollection('films')
+  cinemas.value = await getDataCollection('cinemas')
 
   if (route.params.id) {
     const docRef = doc(db, "seanses", route.params.id);
@@ -134,6 +113,10 @@ onBeforeMount(async () => {
     if (docSnap.exists()) {
       seans.value = docSnap.data()
     }
+  } else {
+    if(cinemas.value.length) {
+      seans.value.cinema_id = cinemas.value[0].id
+    }
   }
 })
 
@@ -142,10 +125,22 @@ watch(() => seans.value.film_id,
       getFilmTypes()
     }
 )
+
+watch(() => seans.value.cinema_id,
+    async (id) => {
+      halls.value = await getDataCollection('halls', ["cinema_id", "==", seans.value.cinema_id])
+    }
+)
 </script>
 
 <template>
   <Form @submit="saveChanges">
+    <SelectComponent v-model="seans.cinema_id" :options="cinemaOptions" label="Кінотеатр" rules="required" name="seans-cinema"
+                     class="col-3"/>
+
+    <SelectComponent v-model="seans.hall_id" :options="hallsOptions" label="Зал" rules="required" name="seans-hall"
+                     class="col-3"/>
+
     <SelectComponent v-model="seans.film_id" :options="filmsOptions" label="Фільм" rules="required" name="seans-film"
                      class="col-3"/>
 

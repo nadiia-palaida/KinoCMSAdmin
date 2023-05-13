@@ -31,6 +31,10 @@ const menu = [
     link: 'admin-cinemas'
   },
   {
+    label: 'Сеанси',
+    link: 'admin-seanses'
+  },
+  {
     label: 'Новини',
     link: 'admin-news'
   },

@@ -35,12 +35,6 @@ const router = createRouter({
             component: () => import('../views/AdminCinemasView.vue')
         },
         {
-            path: '/cinema-hall/:id?',
-            name: 'admin-cinemas-hall',
-            component: () => import('../views/AdminCinemaHallView.vue'),
-            props: route => ({ cinemaId: route.query.cinema})
-        },
-        {
             path: '/cinema-page/:id?',
             name: 'admin-cinemas-page',
             component: () => import('../views/AdminCinemaPageView.vue')
@@ -48,8 +42,12 @@ const router = createRouter({
         {
             path: '/seans-page/:id?',
             name: 'admin-seans-page',
-            component: () => import('../views/AdminSeansView.vue'),
-            props: route => ({ hallId: route.query.hall})
+            component: () => import('../views/AdminSeansPageView.vue'),
+        },
+        {
+            path: '/seanses',
+            name: 'admin-seanses',
+            component: () => import('../views/AdminSeansesView.vue')
         },
         {
             path: '/promotions',
@@ -90,6 +88,11 @@ const router = createRouter({
             path: '/pages/contacts-page',
             name: 'admin-pages-contacts',
             component: () => import('../views/pages/ContactsPageView.vue')
+        },
+        {
+            path: '/pages/cafe',
+            name: 'admin-pages-cafe',
+            component: () => import('../views/pages/CafePageView.vue')
         },
         {
             path: '/users',
