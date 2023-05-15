@@ -1,17 +1,19 @@
 <script setup>
-import {useGeneralStore} from "../../stores/general";
-import {onBeforeMount, onMounted, ref} from "vue";
-import {v4 as uuidv4} from "uuid";
+import TabsComponent from '../../components/form/TabsComponent.vue'
+import InputComponent from '../../components/form/InputComponent.vue'
+import TextareaComponent from '../../components/form/TextareaComponent.vue'
+import ImageUpload from '../../components/form/ImageUpload.vue'
+
+import {v4 as uuidv4} from 'uuid'
+import {useGeneralStore} from '../../stores/general'
 import {languagesOptions} from '../../i18n/languages'
-import TabsComponent from "../../components/form/TabsComponent.vue"
-import InputComponent from "../../components/form/InputComponent.vue";
-import TextareaComponent from "../../components/form/TextareaComponent.vue";
-import ImageUpload from "../../components/form/ImageUpload.vue";
-import {useValidateForm, Form} from "vee-validate"
-import {useRoute, useRouter} from "vue-router";
-import {prepareImagesArrToFirebase, prepareImageToFirebase} from "../../composables/preparedDataToFirebase";
-import {deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc,} from "firebase/firestore";
-import {db} from "../../firebase";
+import {useValidateForm, Form} from 'vee-validate'
+import {useRoute, useRouter} from 'vue-router'
+
+import {prepareImagesArrToFirebase, prepareImageToFirebase} from '../../composables/preparedDataToFirebase'
+import {serverTimestamp} from 'firebase/firestore'
+
+import {onBeforeMount, onMounted, ref} from 'vue'
 
 const props = defineProps({
   cinemaId: {type: String},
@@ -119,7 +121,6 @@ async function saveChanges() {
       }
     }
 
-
     if(!props.hall) {
       emit('createHall', setDocData)
     } else {
@@ -135,23 +136,13 @@ async function saveChanges() {
 onBeforeMount(async () => {
   activeLanguage.value = languagesOptions[0].value
 
-  if (route.params.id) {
-    const docRef = doc(db, "halls", route.params.id);
-
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      cinemaHall.value = docSnap.data()
-    }
+  if(props.hall) {
+    cinemaHall.value = props.hall
   }
 })
 
 onMounted(() => {
   cinemaHall.value.cinema_id = props.cinemaId
-
-  if(props.hall) {
-    cinemaHall.value = props.hall
-  }
 
   store.isLoading = false
 })

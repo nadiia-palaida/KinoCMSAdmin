@@ -1,6 +1,6 @@
 <script setup>
-import {useModalStore} from "../../stores/modal";
-import {computed} from "vue";
+import {useModalStore} from '../../stores/modal'
+import {computed} from 'vue'
 
 const DEFAULT_MODAL_TITLE = 'Modal'
 
@@ -26,13 +26,16 @@ const modalText = computed(() => {
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">{{ modalTitle }}</h5>
+
             <button @click="store.closeModal(false)" type="button" class="close" data-dismiss="modal" aria-label="Close modal">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
+
           <div v-if="modalText" class="modal-body">
             <p>{{ modalText }}</p>
           </div>
+
           <div class="modal-footer">
             <button @click="store.closeModal(true)" type="button" class="btn btn-primary">Підтвердити</button>
 

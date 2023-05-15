@@ -1,9 +1,12 @@
 <script setup>
-import {computed, onMounted, ref} from "vue";
-import {collection, getDocs} from "firebase/firestore";
-import {db} from "../firebase"
-import FilmCard from "../components/films/FilmCard.vue";
-import {useGeneralStore} from "../stores/general";
+import FilmCard from '../components/films/FilmCard.vue'
+
+import {db} from '../firebase'
+import {collection, getDocs} from 'firebase/firestore'
+
+import {computed, onMounted, ref} from 'vue'
+import {useGeneralStore} from '../stores/general'
+import {getDataCollection} from '../composables/queriesFirestore'
 
 const films = ref([])
 
@@ -21,10 +24,7 @@ const filmsShowSoon = computed(() => {
 const store = useGeneralStore()
 
 onMounted(async () => {
-  const querySnapshot = await getDocs(collection(db, "films"));
-  querySnapshot.forEach((doc) => {
-    films.value.push(doc.data())
-  });
+  films.value = await getDataCollection('films')
 
   store.isLoading = false
 })

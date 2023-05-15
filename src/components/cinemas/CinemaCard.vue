@@ -1,5 +1,5 @@
 <script setup>
-import {computed} from "vue";
+import {computed} from 'vue';
 
 const SHOW_BY_LANGUAGE = 'ua'
 
@@ -33,6 +33,5 @@ const cinemaItem = computed(() => {
         <div class="text-center">{{ cinemaItem.name }}</div>
       </router-link>
     </div>
-
   </div>
 </template>

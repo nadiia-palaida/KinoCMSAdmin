@@ -1,8 +1,10 @@
 <script setup>
-import {useGeneralStore} from '../stores/general'
-import {onBeforeMount, onMounted, ref} from 'vue'
-import {collection, deleteDoc, doc, getDocs} from 'firebase/firestore'
 import {db} from '../firebase'
+import {deleteDoc, doc} from 'firebase/firestore'
+import {getDataCollection} from '../composables/queriesFirestore'
+
+import {onBeforeMount, ref} from 'vue'
+import {useGeneralStore} from '../stores/general'
 import {useModalStore} from '../stores/modal'
 
 const store = useGeneralStore()
@@ -12,19 +14,6 @@ const promotions = ref([])
 
 const activeLanguage = 'ua'
 
-onBeforeMount(() => {
-  store.isLoading = false
-})
-
-async function getPromotions() {
-  const querySnapshot = await getDocs(collection(db, "promotions"));
-  promotions.value = []
-
-  querySnapshot.forEach((doc) => {
-    promotions.value.push(doc.data())
-  });
-}
-
 function deletePromotion(id) {
   storeModal.openModal({
     component: 'PermissionModal',
@@ -33,7 +22,7 @@ function deletePromotion(id) {
       .then(async () => {
         store.isLoading = true
         await deleteDoc(doc(db, "promotions", id));
-        await getPromotions()
+        promotions.value = await getDataCollection('promotions')
         store.isLoading = false
       })
 }
@@ -42,8 +31,8 @@ function getStatusLabel(status) {
   return status ? 'ВКЛ' : 'ВИКЛ'
 }
 
-onMounted(async() => {
-  await getPromotions()
+onBeforeMount(async() => {
+  promotions.value = await getDataCollection('promotions')
   store.isLoading = false
 })
 </script>

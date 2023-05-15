@@ -1,5 +1,5 @@
 <script setup>
-import {computed, onBeforeMount} from "vue";
+import {computed} from 'vue'
 
 const SHOW_BY_LANGUAGE = 'ua'
 

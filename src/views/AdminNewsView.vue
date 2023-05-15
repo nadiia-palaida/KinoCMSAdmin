@@ -1,9 +1,11 @@
 <script setup>
-import {useGeneralStore} from '../stores/general'
-import {onBeforeMount, onMounted, ref} from 'vue'
-import {collection, deleteDoc, doc, getDocs} from 'firebase/firestore'
 import {db} from '../firebase'
+import {deleteDoc, doc} from 'firebase/firestore'
+
+import {onBeforeMount, ref} from 'vue'
 import {useModalStore} from '../stores/modal'
+import {useGeneralStore} from '../stores/general'
+import {getDataCollection} from '../composables/queriesFirestore'
 
 const store = useGeneralStore()
 const storeModal = useModalStore()
@@ -16,15 +18,6 @@ onBeforeMount(() => {
   store.isLoading = false
 })
 
-async function getNews() {
-  const querySnapshot = await getDocs(collection(db, "news"));
-  news.value = []
-
-  querySnapshot.forEach((doc) => {
-    news.value.push(doc.data())
-  });
-}
-
 function deleteNews(id) {
   storeModal.openModal({
     component: 'PermissionModal',
@@ -33,7 +26,7 @@ function deleteNews(id) {
       .then(async () => {
         store.isLoading = true
         await deleteDoc(doc(db, "news", id));
-        await getNews()
+        news.value = await getDataCollection('news')
         store.isLoading = false
       })
 }
@@ -42,8 +35,9 @@ function getStatusLabel(status) {
   return status ? 'ВКЛ' : 'ВИКЛ'
 }
 
-onMounted(async() => {
-  await getNews()
+onBeforeMount(async () => {
+  news.value = await getDataCollection('news')
+
   store.isLoading = false
 })
 </script>

@@ -1,10 +1,13 @@
 <script setup>
-import {useGeneralStore} from '../stores/general'
-import {onBeforeMount, onMounted, ref} from 'vue'
-import {collection, deleteDoc, doc, getDocs, setDoc, serverTimestamp, orderBy, query} from 'firebase/firestore'
-import {db} from '../firebase'
-import {useModalStore} from '../stores/modal'
 import moment from 'moment'
+
+import {db} from '../firebase'
+import {deleteDoc, doc} from 'firebase/firestore'
+import {getDataCollection} from '../composables/queriesFirestore'
+
+import {onBeforeMount, ref} from 'vue'
+import {useGeneralStore} from '../stores/general'
+import {useModalStore} from '../stores/modal'
 
 const MAIN_PAGE_NAME = 'main'
 const CONTACTS_PAGE_NAME = 'contacts'
@@ -17,19 +20,6 @@ const pages = ref([])
 
 const activeLanguage = 'ua'
 
-onBeforeMount(() => {
-  store.isLoading = false
-})
-
-async function getPages() {
-  const querySnapshot = await getDocs(collection(db, "pages"));
-  pages.value = []
-
-  querySnapshot.forEach((doc) => {
-    pages.value.push(doc.data())
-  });
-}
-
 function deletePage(id) {
   storeModal.openModal({
     component: 'PermissionModal',
@@ -38,7 +28,7 @@ function deletePage(id) {
       .then(async () => {
         store.isLoading = true
         await deleteDoc(doc(db, "pages", id));
-        await getPages()
+        pages.value = await getDataCollection('pages')
         store.isLoading = false
       })
 }
@@ -73,8 +63,8 @@ function getPageRouteName(id) {
   return activeRouteName
 }
 
-onMounted(async () => {
-  await getPages()
+onBeforeMount(async () => {
+  pages.value = await getDataCollection('pages')
   store.isLoading = false
 })
 </script>

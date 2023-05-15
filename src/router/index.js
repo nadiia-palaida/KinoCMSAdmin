@@ -100,6 +100,11 @@ const router = createRouter({
             component: () => import('../views/AdminUsersView.vue')
         },
         {
+            path: '/users-page/:id',
+            name: 'admin-users-page',
+            component: () => import('../views/AdminUsersPageView.vue')
+        },
+        {
             path: '/subscribe',
             name: 'admin-subscribe',
             component: () => import('../views/AdminSubscribeView.vue')

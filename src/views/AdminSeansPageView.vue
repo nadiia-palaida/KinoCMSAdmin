@@ -1,15 +1,18 @@
 <script setup>
-import {computed, onBeforeMount, onMounted, ref, watch} from "vue";
-import {collection, getDocs, getDoc, doc, updateDoc, setDoc, serverTimestamp} from "firebase/firestore";
-import {db} from "../firebase";
-import {v4 as uuidv4} from "uuid";
-import SelectComponent from "../components/form/SelectComponent.vue";
-import {useValidateForm, Form} from "vee-validate"
-import '@/plugins/vee-validate'
+import SelectComponent from '../components/form/SelectComponent.vue'
 import InputComponent from '../components/form/InputComponent.vue'
-import {useRoute, useRouter} from 'vue-router'
-import {getDataCollection} from '../composables/queriesFirestore'
+
+import {v4 as uuidv4} from "uuid";
+import '@/plugins/vee-validate'
+import {useValidateForm, Form} from "vee-validate"
+
+import {db} from "../firebase";
+import {doc, updateDoc, setDoc} from "firebase/firestore";
+import {getDataCollection, getItemById} from '../composables/queriesFirestore'
 import {transformArrToOptions} from '../composables/selectDataOptions'
+
+import {computed, onBeforeMount, ref, watch} from "vue";
+import {useRoute, useRouter} from 'vue-router'
 
 const activeLanguage = 'ua'
 
@@ -66,14 +69,8 @@ async function getFilmTypes() {
 }
 
 async function getFilm(id) {
-  const docRef = doc(db, "films", id);
-  const docSnap = await getDoc(docRef);
-
-  if (docSnap.exists()) {
-    return docSnap.data()
-  } else {
-    return null
-  }
+  const getFilmItem = await getItemById('films', id)
+  return getFilmItem ? getFilmItem : null
 }
 
 const router = useRouter()
@@ -106,15 +103,9 @@ onBeforeMount(async () => {
   cinemas.value = await getDataCollection('cinemas')
 
   if (route.params.id) {
-    const docRef = doc(db, "seanses", route.params.id);
-
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      seans.value = docSnap.data()
-    }
+    seans.value = await getItemById('seanses', route.params.id)
   } else {
-    if(cinemas.value.length) {
+    if (cinemas.value.length) {
       seans.value.cinema_id = cinemas.value[0].id
     }
   }
@@ -135,7 +126,8 @@ watch(() => seans.value.cinema_id,
 
 <template>
   <Form @submit="saveChanges">
-    <SelectComponent v-model="seans.cinema_id" :options="cinemaOptions" label="Кінотеатр" rules="required" name="seans-cinema"
+    <SelectComponent v-model="seans.cinema_id" :options="cinemaOptions" label="Кінотеатр" rules="required"
+                     name="seans-cinema"
                      class="col-3"/>
 
     <SelectComponent v-model="seans.hall_id" :options="hallsOptions" label="Зал" rules="required" name="seans-hall"

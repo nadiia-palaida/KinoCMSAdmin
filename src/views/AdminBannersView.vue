@@ -5,9 +5,9 @@ import BannerBackground from '../components/banners/BannerBackground.vue'
 
 import {doc, getDocs, collection, setDoc} from 'firebase/firestore'
 import {db, deleteOldImage} from '../firebase'
-import {useGeneralStore} from '../stores/general'
 
 import {ref, onBeforeMount} from 'vue'
+import {useGeneralStore} from '../stores/general'
 
 const startedValue = ref({})
 

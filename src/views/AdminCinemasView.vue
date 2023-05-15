@@ -1,17 +1,22 @@
 <script setup>
-import {ref} from "vue";
-import {useGeneralStore} from "../stores/general";
-import {onMounted} from "vue";
-import {collection, getDocs, deleteDoc, doc} from "firebase/firestore";
-import {db} from "../firebase";
-import CinemaCard from "../components/cinemas/CinemaCard.vue";
-import {readFileImage} from "../helpers/helper";
-import {useModalStore} from "../stores/modal";
+import CinemaCard from '../components/cinemas/CinemaCard.vue'
+
+import {deleteDoc, doc} from 'firebase/firestore'
+import {db} from '../firebase'
+import {useModalStore} from '../stores/modal'
+
+import {ref, onBeforeMount} from 'vue'
+import {useGeneralStore} from '../stores/general'
+import {getDataCollection} from '../composables/queriesFirestore'
 
 const store = useGeneralStore()
 const storeModal = useModalStore()
 
 const cinemas = ref([])
+
+function canDelete(index) {
+  return index !== 0
+}
 
 function deleteItem(id) {
   storeModal.openModal({
@@ -21,26 +26,14 @@ function deleteItem(id) {
       .then(async () => {
         store.isLoading = true
         await deleteDoc(doc(db, "cinemas", id));
-        await getCinemas()
+        cinemas.value = await getDataCollection('cinemas')
         store.isLoading = false
       })
 }
 
-function canDelete(index) {
-  return index !== 0
-}
+onBeforeMount(async() => {
+  cinemas.value = await getDataCollection('cinemas')
 
-async function getCinemas() {
-  const querySnapshot = await getDocs(collection(db, "cinemas"));
-  cinemas.value = []
-
-  querySnapshot.forEach((doc) => {
-    cinemas.value.push(doc.data())
-  });
-}
-
-onMounted(async() => {
-  await getCinemas()
   store.isLoading = false
 })
 </script>

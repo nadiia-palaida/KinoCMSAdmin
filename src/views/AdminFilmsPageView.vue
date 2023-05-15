@@ -1,26 +1,29 @@
 <script setup>
-import {computed, onBeforeMount, onMounted, ref} from 'vue'
-import {useGeneralStore} from "../stores/general";
-import TabsComponent from "../components/form/TabsComponent.vue"
-import {languagesOptions} from '../i18n/languages'
-import {useValidateForm, Form} from "vee-validate"
-import InputComponent from "../components/form/InputComponent.vue";
-import TextareaComponent from "../components/form/TextareaComponent.vue";
-import ImageUpload from "../components/form/ImageUpload.vue";
-import RadioComponent from "../components/form/RadioComponent.vue";
-import CheckboxComponent from "../components/form/CheckboxComponent.vue";
-import {v4 as uuidv4} from "uuid";
-import {doc, setDoc, getDoc, updateDoc} from "firebase/firestore";
-import {db, fileExist, uploadFile} from "../firebase";
+import InputComponent from '../components/form/InputComponent.vue'
+import TextareaComponent from '../components/form/TextareaComponent.vue'
+import ImageUpload from '../components/form/ImageUpload.vue'
+import RadioComponent from '../components/form/RadioComponent.vue'
+import CheckboxComponent from '../components/form/CheckboxComponent.vue'
+import TabsComponent from '../components/form/TabsComponent.vue'
+
 import '@/plugins/vee-validate'
-import {useRoute} from "vue-router";
+import {languagesOptions} from '../i18n/languages'
+import {useValidateForm, Form} from 'vee-validate'
+import {v4 as uuidv4} from 'uuid'
+
+import {doc, setDoc, updateDoc} from 'firebase/firestore'
+import {db} from '../firebase'
+
+import {onBeforeMount, ref} from 'vue'
+import {useRoute} from 'vue-router'
+import {useGeneralStore} from '../stores/general'
+import {prepareImagesArrToFirebase, prepareImageToFirebase} from '../composables/preparedDataToFirebase'
+import {getItemById} from '../composables/queriesFirestore'
 
 const store = useGeneralStore()
 
 const loading = ref(false)
 
-const UKRAINIAN_LANGUAGE_NAME = 'ua'
-const RUSSIAN_LANGUAGE_NAME = 'ru'
 const activeLanguage = ref(null)
 
 const filmTypes = [
@@ -114,44 +117,17 @@ async function saveChanges() {
       status: film.value.status
     }
 
-    for (let filmLanguageKey in film.value) {
-      if (filmLanguageKey === UKRAINIAN_LANGUAGE_NAME || filmLanguageKey === RUSSIAN_LANGUAGE_NAME) {
-        let items = []
-
-        const filmLanguageValue = film.value[filmLanguageKey]
-
-        for (let i = 0; i < filmLanguageValue.images.length; i++) {
-          let item = filmLanguageValue.images[i]
-
-          items.push({
-            fileId: item.fileId,
-            file: await fileExist(item.fileId, `films/${film.value.id}`) ? item.file : await uploadFile(`films/${film.value.id}/${item.fileId}`, item.file),
-          })
-        }
-
-        let filmPoster = filmLanguageValue.poster
-
-        if (Object.keys(filmLanguageValue.poster).length) {
-          filmPoster = {
-            fileId: filmLanguageValue.poster.fileId,
-            file: await fileExist(filmLanguageValue.poster.fileId, `films/${film.value.id}`) ? filmLanguageValue.poster.file : await uploadFile(`films/${film.value.id}/${filmLanguageValue.poster.fileId}`, filmLanguageValue.poster.file),
-          }
-        }
+    for (let languageKey in film.value) {
+      if (languagesOptions.some(item => item.value === languageKey)) {
+        const filmGallery = await prepareImagesArrToFirebase(film.value[languageKey].images, `films/${film.value.id}`)
+        const filmPoster = await prepareImageToFirebase(film.value[languageKey].poster, `films/${film.value.id}`)
 
         setDocData = {
           ...setDocData,
-          [filmLanguageKey]: {
-            name: filmLanguageValue.name,
-            description: filmLanguageValue.description,
+          [languageKey]: {
+            ...film.value[languageKey],
             poster: filmPoster,
-            images: items,
-            trailer: filmLanguageValue.trailer,
-            seo: {
-              url: filmLanguageValue.seo.url,
-              title: filmLanguageValue.seo.title,
-              keywords: filmLanguageValue.seo.keywords,
-              description: filmLanguageValue.seo.description
-            }
+            images: filmGallery,
           }
         }
       }
@@ -173,12 +149,7 @@ onBeforeMount(async () => {
   activeLanguage.value = languagesOptions[0].value
 
   if (route.params.id) {
-    const docRef = doc(db, "films", route.params.id);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      film.value = docSnap.data()
-    }
+    film.value = await getItemById('films', route.params.id)
   } else {
     film.value.status = filmStatus[0].value
   }

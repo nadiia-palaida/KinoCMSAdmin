@@ -1,18 +1,22 @@
 <script setup>
-import {useGeneralStore} from '../../stores/general'
-import {computed, onBeforeMount, ref} from 'vue'
+import TabsComponent from '../../components/form/TabsComponent.vue'
+import InputComponent from '../../components/form/InputComponent.vue'
+import TextareaComponent from '../../components/form/TextareaComponent.vue'
+import ImageUpload from '../../components/form/ImageUpload.vue'
+
 import {v4 as uuidv4} from 'uuid'
 import {languagesOptions} from '../../i18n/languages'
-import TabsComponent from "../../components/form/TabsComponent.vue"
-import InputComponent from "../../components/form/InputComponent.vue";
-import TextareaComponent from "../../components/form/TextareaComponent.vue";
-import ImageUpload from "../../components/form/ImageUpload.vue";
 import {useValidateForm, Form} from 'vee-validate'
-import {prepareImagesArrToFirebase, prepareImageToFirebase} from '../../composables/preparedDataToFirebase'
-import {deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc} from 'firebase/firestore'
+
 import {db} from '../../firebase'
-import {useRoute, useRouter} from 'vue-router'
+import {doc, serverTimestamp, setDoc, updateDoc} from 'firebase/firestore'
+import {prepareImagesArrToFirebase, prepareImageToFirebase} from '../../composables/preparedDataToFirebase'
 import {getItemById} from '../../composables/queriesFirestore'
+
+import {useRoute, useRouter} from 'vue-router'
+import {computed, onBeforeMount, ref} from 'vue'
+
+import {useGeneralStore} from '../../stores/general'
 
 const store = useGeneralStore()
 
@@ -53,6 +57,25 @@ const item = ref({
   }
 })
 
+function addItems(event) {
+  if (event.target.files.length) {
+    for (let i = 0; i < event.target.files.length; i++) {
+      item.value[activeLanguage.value].images.push({
+        fileId: uuidv4(),
+        file: event.target.files[i],
+      })
+    }
+  }
+}
+
+function deleteBanner() {
+  item.value[activeLanguage.value].banner = {}
+}
+
+function deleteImageGallery(index) {
+  item.value[activeLanguage.value].images.splice(index, 1)
+}
+
 const MENU_EDIT_STATUS = 'edit'
 const MENU_ADD_STATUS = 'add'
 
@@ -85,20 +108,20 @@ function changeMeal(index) {
   menuMeal.value = item.value[activeLanguage.value].menu[index]
 }
 
-function deleteMeal(index) {
-  for (let languageKey in item.value) {
-    if (languagesOptions.some(item => item.value === languageKey)) {
-      item.value[languageKey].menu.splice(index, 1)
-    }
-  }
-}
-
 function editMeal() {
   item.value[activeLanguage.value].menu[editMealIndex] = menuMeal.value
 
   clearMealForm()
   editMealIndex.value = null
   menuMealStatus.value = MENU_ADD_STATUS
+}
+
+function deleteMeal(index) {
+  for (let languageKey in item.value) {
+    if (languagesOptions.some(item => item.value === languageKey)) {
+      item.value[languageKey].menu.splice(index, 1)
+    }
+  }
 }
 
 function clearMealForm() {
@@ -111,25 +134,6 @@ function clearMealForm() {
 
 const addMealBtnText = computed(() => menuMealStatus.value === MENU_ADD_STATUS ? 'Додати страву' : 'Редагувати')
 const actionMealBtn = computed(() => menuMealStatus.value === MENU_ADD_STATUS ? addMeal : editMeal)
-
-function addItems(event) {
-  if (event.target.files.length) {
-    for (let i = 0; i < event.target.files.length; i++) {
-      item.value[activeLanguage.value].images.push({
-        fileId: uuidv4(),
-        file: event.target.files[i],
-      })
-    }
-  }
-}
-
-function deleteBanner() {
-  item.value[activeLanguage.value].banner = {}
-}
-
-function deleteImageGallery(index) {
-  item.value[activeLanguage.value].images.splice(index, 1)
-}
 
 const router = useRouter()
 const route = useRoute()

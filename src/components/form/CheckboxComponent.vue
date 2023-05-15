@@ -1,5 +1,5 @@
 <script setup>
-import {useField} from 'vee-validate';
+import {useField} from 'vee-validate'
 
 const props = defineProps({
   name: {type: String, required: true},

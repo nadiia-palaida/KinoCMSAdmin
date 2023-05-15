@@ -1,20 +1,23 @@
 <script setup>
-import {useGeneralStore} from "../stores/general";
-import {computed, onBeforeMount, onMounted, ref} from "vue";
-import {v4 as uuidv4} from "uuid";
-import {languagesOptions} from '../i18n/languages'
-import TabsComponent from "../components/form/TabsComponent.vue"
-import InputComponent from "../components/form/InputComponent.vue";
-import TextareaComponent from "../components/form/TextareaComponent.vue";
-import ImageUpload from "../components/form/ImageUpload.vue";
-import {useValidateForm, Form} from "vee-validate"
-import {useRoute, useRouter} from "vue-router";
-import {db} from "../firebase";
-import {prepareImagesArrToFirebase, prepareImageToFirebase} from "../composables/preparedDataToFirebase";
-import {doc, setDoc, getDoc, getDocs, where, collection, query, updateDoc, deleteDoc} from "firebase/firestore";
-import moment from "moment";
-import {useModalStore} from "../stores/modal";
+import TabsComponent from '../components/form/TabsComponent.vue'
+import InputComponent from '../components/form/InputComponent.vue'
+import TextareaComponent from '../components/form/TextareaComponent.vue'
+import ImageUpload from '../components/form/ImageUpload.vue'
 import CinemaHall from '../components/cinemas/CinemaHall.vue'
+
+import moment from 'moment'
+import {v4 as uuidv4} from 'uuid'
+import {languagesOptions} from '../i18n/languages'
+import {useValidateForm, Form} from 'vee-validate'
+
+import {db} from '../firebase'
+import {prepareImagesArrToFirebase, prepareImageToFirebase} from '../composables/preparedDataToFirebase'
+import {doc, setDoc, updateDoc, deleteDoc} from 'firebase/firestore'
+
+import {onBeforeMount, ref} from 'vue'
+import {useRoute, useRouter} from 'vue-router'
+import {useGeneralStore} from '../stores/general'
+import {getDataCollection, getItemById} from '../composables/queriesFirestore'
 
 const store = useGeneralStore()
 const activeLanguage = ref(null)
@@ -125,7 +128,6 @@ async function saveChanges() {
 
     for (let languageKey in cinema.value) {
       if (languagesOptions.some(item => item.value === languageKey)) {
-
         const cinemaGallery = await prepareImagesArrToFirebase(cinema.value[languageKey].images, `cinemas/${cinema.value.id}`)
         const cinemaLogo = await prepareImageToFirebase(cinema.value[languageKey].logo, `cinemas/${cinema.value.id}`)
         const cinemaBanner = await prepareImageToFirebase(cinema.value[languageKey].banner, `cinemas/${cinema.value.id}`)
@@ -149,8 +151,6 @@ async function saveChanges() {
       await setDoc(docRef, setDocData)
     }
 
-    console.log('halls', halls)
-
     halls.value.forEach(async item => {
       const docRefHalls = doc(db, "halls", item.id);
       await setDoc(docRefHalls, item)
@@ -160,7 +160,6 @@ async function saveChanges() {
       deletedHalls.forEach(async item => {
         await deleteDoc(doc(db, "halls", item));
       })
-
       deletedHalls = []
     }
 
@@ -169,33 +168,16 @@ async function saveChanges() {
   }
 }
 
-async function getHalls() {
-  const q = query(collection(db, "halls"), where("cinema_id", "==", cinema.value.id));
-  const querySnapshot = await getDocs(q);
-  querySnapshot.forEach((doc) => {
-    halls.value.push(doc.data())
-  });
-}
-
 onBeforeMount(async () => {
   activeLanguage.value = languagesOptions[0].value
 
   if (route.params.id) {
-    const docRef = doc(db, "cinemas", route.params.id);
+    cinema.value = await getItemById('cinemas', route.params.id)
 
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      cinema.value = docSnap.data()
-    }
-    getHalls()
+    halls.value = await getDataCollection('halls', ["cinema_id", "==", cinema.value.id])
   }
 
   store.isLoading = false
-})
-
-onMounted(() => {
-
 })
 </script>
 

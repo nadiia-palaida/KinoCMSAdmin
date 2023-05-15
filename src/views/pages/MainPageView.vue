@@ -1,17 +1,20 @@
 <script setup>
-import {useGeneralStore} from '../../stores/general'
-import {onBeforeMount, ref} from 'vue'
+import TabsComponent from '../../components/form/TabsComponent.vue'
+import InputComponent from '../../components/form/InputComponent.vue'
+import TextareaComponent from '../../components/form/TextareaComponent.vue'
+import ImageUpload from '../../components/form/ImageUpload.vue'
+
 import {v4 as uuidv4} from 'uuid'
 import {languagesOptions} from '../../i18n/languages'
-import TabsComponent from "../../components/form/TabsComponent.vue"
-import InputComponent from "../../components/form/InputComponent.vue";
-import TextareaComponent from "../../components/form/TextareaComponent.vue";
-import ImageUpload from "../../components/form/ImageUpload.vue";
 import {useValidateForm, Form} from 'vee-validate'
-import {prepareImagesArrToFirebase, prepareImageToFirebase} from '../../composables/preparedDataToFirebase'
-import {deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc} from 'firebase/firestore'
+
 import {db} from '../../firebase'
+import {doc, serverTimestamp, updateDoc} from 'firebase/firestore'
+
+import {onBeforeMount, ref} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
+import {useGeneralStore} from '../../stores/general'
+import {getItemById} from '../../composables/queriesFirestore'
 
 const store = useGeneralStore()
 
@@ -89,12 +92,7 @@ async function saveChanges() {
 onBeforeMount(async() => {
   activeLanguage.value = languagesOptions[0].value
 
-    const docRef = doc(db, "pages",  mainPage.value.id);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      mainPage.value = docSnap.data()
-    }
+  mainPage.value = await getItemById("pages", mainPage.value.id)
 
   store.isLoading = false
 })

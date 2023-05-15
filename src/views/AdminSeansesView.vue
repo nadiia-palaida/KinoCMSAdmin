@@ -1,9 +1,10 @@
 <script setup>
-import {useGeneralStore} from '../stores/general'
-import {computed, onBeforeMount, onMounted, ref} from 'vue'
-import {collection, getDocs, doc, getDoc, deleteDoc} from "firebase/firestore";
 import {db} from '../firebase'
+import {doc, deleteDoc} from "firebase/firestore";
 import {getDataCollection, getItemById} from '../composables/queriesFirestore'
+
+import {computed, onBeforeMount, onMounted, ref} from 'vue'
+import {useGeneralStore} from '../stores/general'
 import {useModalStore} from '../stores/modal'
 
 const activeLanguage = 'ua'

@@ -1,17 +1,21 @@
 <script setup>
-import {useGeneralStore} from '../stores/general'
-import {onBeforeMount, ref} from 'vue'
+import TabsComponent from '../components/form/TabsComponent.vue'
+import InputComponent from '../components/form/InputComponent.vue'
+import TextareaComponent from '../components/form/TextareaComponent.vue'
+import ImageUpload from '../components/form/ImageUpload.vue'
+
 import {v4 as uuidv4} from 'uuid'
 import {languagesOptions} from '../i18n/languages'
-import TabsComponent from "../components/form/TabsComponent.vue"
-import InputComponent from "../components/form/InputComponent.vue";
-import TextareaComponent from "../components/form/TextareaComponent.vue";
-import ImageUpload from "../components/form/ImageUpload.vue";
 import {useValidateForm, Form} from 'vee-validate'
-import {prepareImagesArrToFirebase, prepareImageToFirebase} from '../composables/preparedDataToFirebase'
-import {deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc} from 'firebase/firestore'
+
 import {db} from '../firebase'
+import {prepareImagesArrToFirebase, prepareImageToFirebase} from '../composables/preparedDataToFirebase'
+import {doc, serverTimestamp, setDoc, updateDoc} from 'firebase/firestore'
+import {getItemById} from '../composables/queriesFirestore'
+
+import {onBeforeMount, ref} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
+import {useGeneralStore} from '../stores/general'
 
 const store = useGeneralStore()
 
@@ -88,7 +92,6 @@ async function saveChanges() {
 
     for (let languageKey in news.value) {
       if (languagesOptions.some(item => item.value === languageKey)) {
-
         const cinemaGallery = await prepareImagesArrToFirebase(news.value[languageKey].images, `news/${news.value.id}`)
         const cinemaBanner = await prepareImageToFirebase(news.value[languageKey].banner, `news/${news.value.id}`)
 
@@ -120,13 +123,7 @@ onBeforeMount(async() => {
   activeLanguage.value = languagesOptions[0].value
 
   if (route.params.id) {
-    const docRef = doc(db, "news", route.params.id);
-
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      news.value = docSnap.data()
-    }
+    news.value = await getItemById('news', route.params.id)
   }
 
   store.isLoading = false

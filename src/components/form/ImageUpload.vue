@@ -6,9 +6,9 @@ import {v4 as uuidv4} from 'uuid'
 import {readFileImage} from '../../helpers/helper'
 import {createToaster} from '@meforma/vue-toaster'
 
-import {useModalStore} from '../../stores/modal';
+import {useModalStore} from '../../stores/modal'
 
-import {computed, onMounted, reactive, ref, watch} from 'vue'
+import {computed, onMounted, reactive, ref} from 'vue'
 import {useField} from 'vee-validate'
 
 const FIELD_FILE_NAME = 'file'
@@ -23,7 +23,6 @@ const props = defineProps({
   name: {type: String},
   rules: {},
   errors: {type: Array},
-  form: {}
 })
 
 const emit = defineEmits(['deleteImage', 'update:modelValue'])
@@ -77,7 +76,7 @@ const imgSrc = computed(() => {
   }
 })
 
-const {errorMessage, value} = reactive(useField(() => props.name, inputValue =>!!inputValue && !!inputValue.file));
+const {errorMessage, value} = reactive(useField(() => props.name, inputValue => !!inputValue && !!inputValue.file));
 
 onMounted(() => {
   if (props.modelValue.file && typeof props.modelValue.file === 'object') {
@@ -99,8 +98,7 @@ onMounted(() => {
         <div class="image-upload__img-wrap rounded border border-secondary mb-2">
           <i v-show="!modelValue.file" class="fa-solid fa-image"></i>
 
-          <img v-show="modelValue.file" :src="imgSrc" ref="imageUploadRef" alt="Upload image"
-               class="image-upload__img">
+          <img v-show="modelValue.file" :src="imgSrc" ref="imageUploadRef" alt="Upload image" class="image-upload__img">
         </div>
 
         <input @change="getFiles" type="file" accept="image/png, image/jpeg" class="image-upload__input">
@@ -110,8 +108,7 @@ onMounted(() => {
         <span v-if="errorMessage" class="input__error error">{{ errorMessage }}</span>
       </label>
 
-      <InputComponent v-if="hasUrl" :modelValue="modelValue.url"
-                      @input="onInput($event.target.value, FIELD_URL_NAME)"
+      <InputComponent v-if="hasUrl" :modelValue="modelValue.url" @input="onInput($event.target.value, FIELD_URL_NAME)"
                       rules="required" :name="`film-url-${uid}`" label="URL" class="mb-4"/>
 
       <InputComponent v-if="hasText" :modelValue="modelValue.text"

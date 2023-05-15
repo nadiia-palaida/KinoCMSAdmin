@@ -1,7 +1,5 @@
 <script setup>
-import {useField} from 'vee-validate';
-
-defineEmits(['update:modelValue'])
+import {useField} from 'vee-validate'
 
 const props = defineProps({
   type: {type: String, default: 'text'},
@@ -12,6 +10,8 @@ const props = defineProps({
   modelValue: {required: true},
   rules: {},
 })
+
+defineEmits(['update:modelValue'])
 
 const {errorMessage, value} = useField(() => props.name, props.rules);
 </script>

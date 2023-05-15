@@ -1,17 +1,21 @@
 <script setup>
-import {useGeneralStore} from '../stores/general'
-import {onBeforeMount, ref} from 'vue'
+import TabsComponent from '../components/form/TabsComponent.vue'
+import InputComponent from '../components/form/InputComponent.vue'
+import TextareaComponent from '../components/form/TextareaComponent.vue'
+import ImageUpload from '../components/form/ImageUpload.vue'
+
 import {v4 as uuidv4} from 'uuid'
 import {languagesOptions} from '../i18n/languages'
-import TabsComponent from "../components/form/TabsComponent.vue"
-import InputComponent from "../components/form/InputComponent.vue";
-import TextareaComponent from "../components/form/TextareaComponent.vue";
-import ImageUpload from "../components/form/ImageUpload.vue";
-import {useValidateForm, Form} from 'vee-validate'
-import {prepareImagesArrToFirebase, prepareImageToFirebase} from '../composables/preparedDataToFirebase'
-import {deleteDoc, doc, getDoc, serverTimestamp, setDoc, updateDoc} from 'firebase/firestore'
+import {useValidateForm,  Form} from 'vee-validate'
+
 import {db} from '../firebase'
+import {getItemById} from '../composables/queriesFirestore'
+import {prepareImagesArrToFirebase, prepareImageToFirebase} from '../composables/preparedDataToFirebase'
+import {doc, serverTimestamp, setDoc, updateDoc} from 'firebase/firestore'
+
+import {onBeforeMount, ref} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
+import {useGeneralStore} from '../stores/general'
 
 const store = useGeneralStore()
 
@@ -74,11 +78,6 @@ function deleteImageGallery(index) {
 const router = useRouter()
 const route = useRoute()
 
-import { useForm } from 'vee-validate';
-const form = useForm();
-
-console.log('form', form)
-
 async function saveChanges() {
   const formValidate = useValidateForm()
 
@@ -125,13 +124,7 @@ onBeforeMount(async() => {
   activeLanguage.value = languagesOptions[0].value
 
   if (route.params.id) {
-    const docRef = doc(db, "promotions", route.params.id);
-
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      promotion.value = docSnap.data()
-    }
+    promotion.value = await getItemById('promotions', route.params.id)
   }
 
   store.isLoading = false
@@ -167,7 +160,7 @@ onBeforeMount(async() => {
 
       <div class="d-flex mb-4">
         <div class="input__label-text">Головна картинка</div>
-        <ImageUpload v-model="promotion[activeLanguage].banner" @deleteImage="deleteBanner" name="promotion-banner" :form="form"
+        <ImageUpload v-model="promotion[activeLanguage].banner" @deleteImage="deleteBanner" name="promotion-banner"
                      :has-text="false" :has-url="false" class="col-2"/>
       </div>
 

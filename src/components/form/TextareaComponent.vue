@@ -1,5 +1,5 @@
 <script setup>
-import {useField} from 'vee-validate';
+import {useField} from 'vee-validate'
 
 defineEmits(['update:modelValue'])
 
