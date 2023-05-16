@@ -1,29 +1,45 @@
 <script setup>
-import InputComponent from '../components/form/InputComponent.vue'
+import InputComponent from '../../components/form/InputComponent.vue'
+import CheckboxComponent from '../form/CheckboxComponent.vue'
 
-import {v4 as uuidv4} from 'uuid'
-
-import {db} from '../firebase'
-import {doc, query, collection, limit, getDocs, orderBy, deleteDoc, startAt, where, serverTimestamp, setDoc} from 'firebase/firestore'
-import {getFirstItems, nextPage, prevPage, search} from '../composables/queriesFirestore'
-
-import {citiesOptionsList} from '../composables/cities'
-
+import {useGeneralStore} from '../../stores/general'
 import {onBeforeMount, ref} from 'vue'
-import {useGeneralStore} from '../stores/general'
-import {useModalStore} from '../stores/modal'
 import moment from 'moment'
+import {collection} from 'firebase/firestore'
+import {db} from '../../firebase'
+import {getFirstItems, nextPage, prevPage, search} from '../../composables/queriesFirestore'
+import {citiesOptionsList} from '../../composables/cities'
 
 const store = useGeneralStore()
-const storeModal = useModalStore()
+
+const props = defineProps({
+  usersArr: {type: Array, default: []}
+})
+
+const emit = defineEmits(['send'])
 
 const users = ref({
   items: [],
 })
 
+const usersChoosen = ref([])
+
 const searchText = ref('')
 const searchClickText = ref('')
 
+function onChangeChosenUser(value, id) {
+  if (value) {
+    usersChoosen.value.push(id)
+  } else {
+    if (isChosen(id)) {
+      usersChoosen.value = usersChoosen.value.filter(item => item !== id)
+    }
+  }
+}
+
+function isChosen(id) {
+  return usersChoosen.value.some(item => item === id)
+}
 
 function getFullName(index) {
   return `${users.value.items[index].firstName} ${users.value.items[index].lastName}`
@@ -39,33 +55,15 @@ function getCityName(value) {
   return findItem ? findItem.label : value
 }
 
-function deleteUser(id) {
-  storeModal.openModal({
-    component: 'PermissionModal',
-    data: {title: 'Підтвердження видалення', text: 'Ви дійсно хочете видалити цей елемент?'}
-  })
-      .then(async () => {
-        store.isLoading = true
-        await deleteDoc(doc(db, "users", id));
-
-        const queryReq = query(usersRef, orderBy(USERS_ORDER_BY), startAt(lastVisible), limit(USERS_PER_PAGE))
-        const documentSnapshots = await getDocs(queryReq)
-
-        let items = []
-        documentSnapshots.forEach((doc) => {
-          items.push(doc.data())
-        });
-
-        users.value.items = items
-        store.isLoading = false
-      })
-}
-
 function createdDate(date) {
   if (date) {
     return moment(date.toDate()).format('DD.MM.YYYY');
   }
   return null
+}
+
+function sendChosenUsers() {
+  emit('send', usersChoosen.value)
 }
 
 const USERS_PER_PAGE = 5
@@ -86,43 +84,13 @@ async function searchUsers() {
   users.value.items = await search(usersRef, "nameArr", searchClickText.value, 'id', 5)
 }
 
-function destructionString(string) {
-  let strArr = []
-
-  for(let i = 0; i < string.length; i++) {
-    strArr.push(string.slice(0, i + 1))
-  }
-
-  return strArr
-}
 
 onBeforeMount(async () => {
   users.value.items = await getFirstItems(usersRef, USERS_ORDER_BY, USERS_PER_PAGE)
 
+  usersChoosen.value = props.usersArr
+
   store.isLoading = false
-/*   for (let i = 0; i < 30; i++) {
-     const user = {
-       created: serverTimestamp(),
-       id: uuidv4(),
-       firstName: `Nadiia-${i}`,
-       lastName: 'Example',
-       nick: `Nadiia`,
-       email: 'example@gmail.com',
-       address: 'м.Київ',
-       password: '1111',
-       checkPassword: '1111',
-       cardNumber: 11111111111111111,
-       lang: 'ua',
-       gender: 'male',
-       phone: '0985674581',
-       birthDate: '05-25-2012',
-       city: 'lviv',
-     }
-
-     user.nameArr = destructionString(user.firstName + user.lastName),
-
-     await setDoc(doc(db, "users", user.id), user);
-   }*/
 })
 </script>
 
@@ -147,6 +115,7 @@ onBeforeMount(async () => {
     <table class="table" v-if="users.items.length">
       <thead>
       <tr>
+        <th></th>
         <th scope="col">ID</th>
         <th scope="col">Дата реєстрації</th>
         <th scope="col">День народження</th>
@@ -155,13 +124,15 @@ onBeforeMount(async () => {
         <th scope="col">ПІБ</th>
         <th scope="col">Псевдонім</th>
         <th scope="col">Місто</th>
-        <th></th>
-        <th></th>
       </tr>
       </thead>
       <tbody>
       <tr v-for="(item, index) in users.items">
-        <th>{{ item.id }}</th>
+        <td>
+          <input type="checkbox" @change="onChangeChosenUser($event.target.checked, item.id)" :checked="isChosen(item.id)"
+                 :name="`checkbox-user-subscribe-${item.id}`">
+        </td>
+        <td>{{ item.id }}</td>
         <td>{{ createdDate(item.created) }}</td>
         <td>{{ item.birthDate }}</td>
         <td>{{ item.email }}</td>
@@ -169,16 +140,6 @@ onBeforeMount(async () => {
         <td>{{ getFullName(index) }}</td>
         <td>{{ item.nick }}</td>
         <td>{{ getCityName(item.city) }}</td>
-        <td>
-          <router-link :to="{name: 'admin-users-page', params: {id: item.id}}">
-            <i class="fa-solid fa-pen"></i>
-          </router-link>
-        </td>
-        <td>
-          <button @click="deleteUser(item.id)" type="button">
-            <i class="fa-solid fa-trash-can"></i>
-          </button>
-        </td>
       </tr>
       </tbody>
     </table>
@@ -193,5 +154,9 @@ onBeforeMount(async () => {
         </li>
       </ul>
     </nav>
+
+    <div class="d-flex justify-content-center">
+      <button @click="sendChosenUsers" class="btn btn-success">Відправити вибрані</button>
+    </div>
   </template>
 </template>
