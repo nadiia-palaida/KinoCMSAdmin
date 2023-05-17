@@ -108,40 +108,45 @@ const route = useRoute()
 async function saveChanges() {
   const formValidate = useValidateForm()
 
-  if (formValidate) {
-    loading.value = true
-
-    let setDocData = {
-      id: film.value.id,
-      type: film.value.type,
-      status: film.value.status
+  for (let languageKey in film.value) {
+    if (languagesOptions.some(item => item.value === languageKey)) {
     }
 
-    for (let languageKey in film.value) {
-      if (languagesOptions.some(item => item.value === languageKey)) {
-        const filmGallery = await prepareImagesArrToFirebase(film.value[languageKey].images, `films/${film.value.id}`)
-        const filmPoster = await prepareImageToFirebase(film.value[languageKey].poster, `films/${film.value.id}`)
+    if (formValidate) {
+      loading.value = true
 
-        setDocData = {
-          ...setDocData,
-          [languageKey]: {
-            ...film.value[languageKey],
-            poster: filmPoster,
-            images: filmGallery,
+      let setDocData = {
+        id: film.value.id,
+        type: film.value.type,
+        status: film.value.status
+      }
+
+      for (let languageKey in film.value) {
+        if (languagesOptions.some(item => item.value === languageKey)) {
+          const filmGallery = await prepareImagesArrToFirebase(film.value[languageKey].images, `films/${film.value.id}`)
+          const filmPoster = await prepareImageToFirebase(film.value[languageKey].poster, `films/${film.value.id}`)
+
+          setDocData = {
+            ...setDocData,
+            [languageKey]: {
+              ...film.value[languageKey],
+              poster: filmPoster,
+              images: filmGallery,
+            }
           }
         }
       }
+
+      const docRef = doc(db, "films", film.value.id);
+
+      if (route.params.id) {
+        await updateDoc(docRef, setDocData)
+      } else {
+        await setDoc(docRef, setDocData)
+      }
+
+      loading.value = false
     }
-
-    const docRef = doc(db, "films", film.value.id);
-
-    if (route.params.id) {
-      await updateDoc(docRef, setDocData)
-    } else {
-      await setDoc(docRef, setDocData)
-    }
-
-    loading.value = false
   }
 }
 
@@ -153,9 +158,9 @@ onBeforeMount(async () => {
   } else {
     film.value.status = filmStatus[0].value
   }
+
   store.setLoading(false)
 })
-
 </script>
 
 <template>
